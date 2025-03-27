@@ -3,8 +3,16 @@ import 'suggestions_page.dart';
 import 'profile_page.dart';
 import 'dashboard_page.dart';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
+
+
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized(); // Ensures Flutter is ready before Firebase initializes
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(MyApp());
 }
 
