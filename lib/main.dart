@@ -3,7 +3,6 @@ import 'suggestions_page.dart';
 import 'profile_page.dart';
 import 'dashboard_page.dart';
 
-
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
