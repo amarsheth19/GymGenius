@@ -54,9 +54,9 @@ class DashboardPage extends StatelessWidget {
               painter: _BodyPainter(),
               child: Stack(
                 children: [
-                  // Chest (Upper/Lower)
-                  _buildMuscleZone(context, 'Upper Chest', Colors.amber, 120, 40, 80, 50),
-                  _buildMuscleZone(context, 'Lower Chest', Colors.amber[300]!, 120, 40, 80, 90),
+                  // Chest and Back
+                  _buildMuscleZone(context, 'Chest', Colors.amber, 120, 80, 80, 50),
+                  _buildMuscleZone(context, 'Back', Colors.brown, 120, 80, 80, 90),
                   
                   // Arms
                   _buildMuscleZone(context, 'Left Arm', Colors.blue, 40, 100, 50, 100),
@@ -68,9 +68,6 @@ class DashboardPage extends StatelessWidget {
                   // Legs
                   _buildMuscleZone(context, 'Left Leg', Colors.purple, 50, 120, 80, 200),
                   _buildMuscleZone(context, 'Right Leg', Colors.purple, 50, 120, 150, 200),
-                  
-                  // Back (invisible but tappable)
-                  _buildMuscleZone(context, 'Back', Colors.grey, 120, 180, 80, 100, visible: false),
                 ],
               ),
             ),
@@ -318,8 +315,7 @@ class DashboardPage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           _buildRankingItem('Chest', 'GOLD', false),
-          _buildRankingItem('Lower Chest', 'GOLD I', true),
-          _buildRankingItem('Upper Chest', 'SILVER II', false),
+          _buildRankingItem('Back', 'GOLD I', true),
           _buildRankingItem('Abs', 'CHAMPION', false),
           _buildRankingItem('Obliques', 'SILVER II', false),
           _buildRankingItem('Left Bicep', 'BRONZE', false),
@@ -336,6 +332,7 @@ class DashboardPage extends StatelessWidget {
     if (color == Colors.blue) return 'SILVER';
     if (color == Colors.green) return 'CHAMPION';
     if (color == Colors.purple) return 'GOLD II';
+    if (color == Colors.brown) return 'GOLD I';
     return 'BRONZE';
   }
 }
