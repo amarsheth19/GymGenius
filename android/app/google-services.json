@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "241347517776",
+    "project_id": "gym-genius-f35e2",
+    "storage_bucket": "gym-genius-f35e2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:241347517776:android:4e855e0d8b75c8e973e055",
+        "android_client_info": {
+          "package_name": "com.example.gym_genius"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDGkd4GWx0MIIj7DMt3xSCaiXM8BmBPJrQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
