@@ -30,6 +30,7 @@ for i, c in enumerate(cls):
 feedback = get_feedback(exercise_detected)
 print(feedback)
 
+#temp graph checker
 output_image = results.render()[0] 
 output_image_bgr = cv2.cvtColor(output_image, cv2.COLOR_RGB2BGR)
 cv2.imwrite('output_detected_image.jpg', output_image_bgr)
