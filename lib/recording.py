@@ -13,9 +13,9 @@ def recording(output_file = 'output.mp4'):
 
     while camera.isOpened():
         ret, frame = camera.read()
-        if not ret:
+        if not ret: #if the camera is not reading anything just break out of the for loop
             break
-        out.write(frame)
+        out.write(frame) 
         cv2.imshow('Recording', frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'): #Ends when user presses q
@@ -26,7 +26,7 @@ def recording(output_file = 'output.mp4'):
     cv2.destroyAllWindows()
 
 
-recording(output_file= "output.mp4")
+recording(output_file= "output.mp4") #Calls the function
 
 
 
