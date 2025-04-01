@@ -18,7 +18,7 @@ class DashboardPage extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              _buildHeaderSection(),
+              //_buildHeaderSection(),
               const SizedBox(height: 24),
               _buildInteractiveBodyGraph(context),
               const SizedBox(height: 24),
@@ -54,20 +54,33 @@ class DashboardPage extends StatelessWidget {
               painter: _BodyPainter(),
               child: Stack(
                 children: [
+                  Positioned(
+                    top: 5, // Adjust the position to place it above the torso
+                    left: 120, // Center it horizontally
+                    child: Container(
+                      width: 40, // Circular head width
+                      height: 40, // Circular head height
+                      decoration: BoxDecoration(
+                        color: Colors.grey, // Head color
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
                   // Chest and Back
-                  _buildMuscleZone(context, 'Chest', Colors.amber, 120, 80, 80, 50),
-                  _buildMuscleZone(context, 'Back', Colors.brown, 120, 80, 80, 90),
+                  _buildMuscleZone(context, 'Back', Colors.brown, 120, 25, 80, 55),
+                  _buildMuscleZone(context, 'Chest', Colors.amber, 120, 70, 80, 80),
+                  
                   
                   // Arms
-                  _buildMuscleZone(context, 'Left Arm', Colors.blue, 40, 100, 50, 100),
-                  _buildMuscleZone(context, 'Right Arm', Colors.blue, 40, 100, 190, 100),
+                  _buildMuscleZone(context, 'Left Arm', Colors.brown, 40, 100, 40, 70),
+                  _buildMuscleZone(context, 'Right Arm', Colors.brown, 40, 100, 200, 70),
                   
                   // Core
-                  _buildMuscleZone(context, 'Abs', Colors.green, 100, 60, 90, 150),
+                  _buildMuscleZone(context, 'Abs', Colors.grey, 65, 65, 110, 135),
                   
                   // Legs
-                  _buildMuscleZone(context, 'Left Leg', Colors.purple, 50, 120, 80, 200),
-                  _buildMuscleZone(context, 'Right Leg', Colors.purple, 50, 120, 150, 200),
+                  _buildMuscleZone(context, 'Left Leg', Colors.amber, 50, 100, 80, 190),
+                  _buildMuscleZone(context, 'Right Leg', Colors.amber, 50, 100, 150, 190),
                 ],
               ),
             ),
@@ -126,9 +139,9 @@ class DashboardPage extends StatelessWidget {
   Widget _buildMuscleButtonsRow(BuildContext context) {
     final muscles = {
       'Chest': Colors.amber,
-      'Arms': Colors.blue,
-      'Core': Colors.green,
-      'Legs': Colors.purple,
+      'Arms': Colors.brown,
+      'Core': Colors.grey,
+      'Legs': Colors.amber,
       'Back': Colors.brown,
     };
 
@@ -209,22 +222,22 @@ class DashboardPage extends StatelessWidget {
 
   // ========== SUPPORTING WIDGETS ========== //
 
-  Widget _buildHeaderSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Instantly Identify\nMuscles To Improve',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            height: 1.2,
-          ),
-        ),
-        const SizedBox(height: 16),
-      ],
-    );
-  }
+  // Widget _buildHeaderSection() {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       const Text(
+  //         'Instantly Identify\nMuscles To Improve',
+  //         style: TextStyle(
+  //           fontSize: 24,
+  //           fontWeight: FontWeight.bold,
+  //           height: 1.2,
+  //         ),
+  //       ),
+  //       const SizedBox(height: 16),
+  //     ],
+  //   );
+  // }
 
   Widget _buildRankingItem(String muscle, String rank, bool isChecked) {
     Color rankColor;
@@ -310,18 +323,14 @@ class DashboardPage extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Icon(Icons.sentiment_satisfied_alt, color: Colors.amber),
             ],
           ),
           const SizedBox(height: 16),
           _buildRankingItem('Chest', 'GOLD', false),
-          _buildRankingItem('Back', 'GOLD I', true),
-          _buildRankingItem('Abs', 'CHAMPION', false),
-          _buildRankingItem('Obliques', 'SILVER II', false),
-          _buildRankingItem('Left Bicep', 'BRONZE', false),
-          _buildRankingItem('Right Bicep', 'GOLD I', false),
-          _buildRankingItem('Left Quad', 'GOLD', false),
-          _buildRankingItem('Right Quad', 'GOLD', false),
+          _buildRankingItem('Back', 'BRONZE', true),
+          _buildRankingItem('Abs', 'SILVER', false),
+          _buildRankingItem('Biceps', 'BRONZE', false),
+          _buildRankingItem('Quads', 'GOLD', false),
         ],
       ),
     );
@@ -331,19 +340,19 @@ class DashboardPage extends StatelessWidget {
     if (color == Colors.amber) return 'GOLD';
     if (color == Colors.blue) return 'SILVER';
     if (color == Colors.green) return 'CHAMPION';
-    if (color == Colors.purple) return 'GOLD II';
-    if (color == Colors.brown) return 'GOLD I';
+    if (color == Colors.brown) return 'Bronze';
+    if (color == Colors.amber) return 'GOLD I';
     return 'BRONZE';
   }
 }
 
-// ========== BODY PAINTER ========== //
+//========== BODY PAINTER ========== //
 
 class _BodyPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.grey[200]!
+      ..color = Colors.white
       ..style = PaintingStyle.fill;
 
     // Draw torso
@@ -352,20 +361,26 @@ class _BodyPainter extends CustomPainter {
         Rect.fromCenter(
           center: Offset(size.width / 2, size.height / 2 - 20),
           width: 120,
-          height: 180,
+          height: 140,
         ),
         const Radius.circular(20),
       ),
       paint,
     );
 
-    // Draw head
-    canvas.drawCircle(
-      Offset(size.width / 2, 40),
-      20,
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(size.width / 2, size.height / 2 - 60),  // Position the head above torso
+          width: 40,  // Width and height for a circular head
+          height: 40, // Same height as width for a circle
+        ),
+        const Radius.circular(20),  // This will make the head circular
+      ),
       paint,
     );
-
+    
+    
     // Draw arms
     canvas.drawRRect(
       RRect.fromRectAndRadius(
@@ -402,3 +417,4 @@ class _BodyPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
