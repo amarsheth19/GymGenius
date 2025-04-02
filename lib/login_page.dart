@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'main.dart'; // Import your main.dart to access MainScreen
-import 'signup_page.dart'; 
-
+import 'main.dart'; // Import main.dart to access MainScreen
+import 'signup_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -32,18 +31,17 @@ class _LoginPageState extends State<LoginPage> {
         _errorMessage = null;
       });
 
-      // Validate form
       if (_formKey.currentState!.validate()) {
         await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
 
-        // Navigate to main screen after successful login
         if (mounted) {
-          Navigator.pushReplacement(
+          Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const MainScreen()),
+            (route) => false,
           );
         }
       }
@@ -82,6 +80,15 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Login"),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const MainScreen()),
+            );
+          },
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -90,7 +97,6 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Email Input Field
               TextFormField(
                 controller: _emailController,
                 decoration: const InputDecoration(
@@ -110,8 +116,6 @@ class _LoginPageState extends State<LoginPage> {
                 },
               ),
               const SizedBox(height: 20),
-
-              // Password Input Field
               TextFormField(
                 controller: _passwordController,
                 decoration: const InputDecoration(
@@ -131,8 +135,6 @@ class _LoginPageState extends State<LoginPage> {
                 },
               ),
               const SizedBox(height: 20),
-
-              // Error message
               if (_errorMessage != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
@@ -141,26 +143,20 @@ class _LoginPageState extends State<LoginPage> {
                     style: const TextStyle(color: Colors.red),
                   ),
                 ),
-
-              // Login Button - Fixed implementation
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _signInWithEmailAndPassword,
                   child: _isLoading
-                      ? const CircularProgressIndicator(
-                          color: Colors.white,
-                        )
+                      ? const CircularProgressIndicator(color: Colors.white)
                       : const Text("Login"),
                 ),
               ),
               const SizedBox(height: 10),
-
-              // Sign Up Link
               TextButton(
                 onPressed: () {
-                  Navigator.push(
+                  Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(builder: (context) => const SignUpPage()),
                   );
