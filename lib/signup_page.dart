@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'main.dart'; // Import your main.dart to access MainScreen
-import 'signup_page.dart'; 
+import 'login_page.dart'; // For navigation back to login
 
-
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class SignUpPage extends StatefulWidget {
+  const SignUpPage({super.key});
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  _SignUpPageState createState() => _SignUpPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _SignUpPageState extends State<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -22,28 +21,31 @@ class _LoginPageState extends State<LoginPage> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  Future<void> _signInWithEmailAndPassword() async {
+  Future<void> _signUpWithEmailAndPassword() async {
     try {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
-
-      // Validate form
       if (_formKey.currentState!.validate()) {
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
+        setState(() {
+          _isLoading = true;
+          _errorMessage = null;
+        });
+
+        // Create user in Firebase
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
 
-        // Navigate to main screen after successful login
         if (mounted) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const MainScreen()),
+            MaterialPageRoute(builder: (context) => const LoginPage()),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Account created successfully!')),
           );
         }
       }
@@ -62,18 +64,14 @@ class _LoginPageState extends State<LoginPage> {
 
   String _getErrorMessage(String code) {
     switch (code) {
+      case 'email-already-in-use':
+        return 'This email is already registered.';
       case 'invalid-email':
-        return 'The email address is badly formatted.';
-      case 'user-disabled':
-        return 'This user has been disabled.';
-      case 'user-not-found':
-        return 'No user found with this email.';
-      case 'wrong-password':
-        return 'Wrong password provided for that user.';
-      case 'too-many-requests':
-        return 'Too many requests. Try again later.';
+        return 'Please enter a valid email.';
+      case 'weak-password':
+        return 'Password should be at least 6 characters.';
       default:
-        return 'Login failed. Please try again.';
+        return 'Registration failed. Please try again.';
     }
   }
 
@@ -81,7 +79,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Login"),
+        title: const Text('Sign Up'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -90,11 +88,11 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Email Input Field
+              // Email Field
               TextFormField(
                 controller: _emailController,
                 decoration: const InputDecoration(
-                  labelText: "Email",
+                  labelText: 'Email',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.email),
                 ),
@@ -111,18 +109,18 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 20),
 
-              // Password Input Field
+              // Password Field
               TextFormField(
                 controller: _passwordController,
                 decoration: const InputDecoration(
-                  labelText: "Password",
+                  labelText: 'Password',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.lock),
                 ),
                 obscureText: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your password';
+                    return 'Please enter a password';
                   }
                   if (value.length < 6) {
                     return 'Password must be at least 6 characters';
@@ -132,7 +130,25 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 20),
 
-              // Error message
+              // Confirm Password Field
+              TextFormField(
+                controller: _confirmPasswordController,
+                decoration: const InputDecoration(
+                  labelText: 'Confirm Password',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.lock_outline),
+                ),
+                obscureText: true,
+                validator: (value) {
+                  if (value != _passwordController.text) {
+                    return 'Passwords do not match';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+
+              // Error Message
               if (_errorMessage != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
@@ -142,30 +158,30 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
 
-              // Login Button - Fixed implementation
+              // Sign Up Button
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : _signInWithEmailAndPassword,
+                  onPressed: _isLoading ? null : _signUpWithEmailAndPassword,
                   child: _isLoading
-                      ? const CircularProgressIndicator(
-                          color: Colors.white,
-                        )
-                      : const Text("Login"),
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Sign Up'),
                 ),
               ),
               const SizedBox(height: 10),
 
-              // Sign Up Link
+              // Login Link
               TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const SignUpPage()),
-                  );
-                },
-                child: const Text("Don't have an account? Sign Up"),
+                onPressed: _isLoading
+                    ? null
+                    : () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const LoginPage()),
+                        );
+                      },
+                child: const Text('Already have an account? Login'),
               ),
             ],
           ),
