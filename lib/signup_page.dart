@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'login_page.dart'; // For navigation back to login
+import 'main.dart';
+import 'login_page.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -33,16 +34,16 @@ class _SignUpPageState extends State<SignUpPage> {
           _errorMessage = null;
         });
 
-        // Create user in Firebase
         await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
 
         if (mounted) {
-          Navigator.pushReplacement(
+          Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(builder: (context) => const LoginPage()),
+            MaterialPageRoute(builder: (context) => const MainScreen()),
+            (route) => false,
           );
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Account created successfully!')),
@@ -80,6 +81,15 @@ class _SignUpPageState extends State<SignUpPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sign Up'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginPage()),
+            );
+          },
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -88,7 +98,6 @@ class _SignUpPageState extends State<SignUpPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Email Field
               TextFormField(
                 controller: _emailController,
                 decoration: const InputDecoration(
@@ -108,8 +117,6 @@ class _SignUpPageState extends State<SignUpPage> {
                 },
               ),
               const SizedBox(height: 20),
-
-              // Password Field
               TextFormField(
                 controller: _passwordController,
                 decoration: const InputDecoration(
@@ -129,8 +136,6 @@ class _SignUpPageState extends State<SignUpPage> {
                 },
               ),
               const SizedBox(height: 20),
-
-              // Confirm Password Field
               TextFormField(
                 controller: _confirmPasswordController,
                 decoration: const InputDecoration(
@@ -147,8 +152,6 @@ class _SignUpPageState extends State<SignUpPage> {
                 },
               ),
               const SizedBox(height: 20),
-
-              // Error Message
               if (_errorMessage != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
@@ -157,8 +160,6 @@ class _SignUpPageState extends State<SignUpPage> {
                     style: const TextStyle(color: Colors.red),
                   ),
                 ),
-
-              // Sign Up Button
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -170,8 +171,6 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
               ),
               const SizedBox(height: 10),
-
-              // Login Link
               TextButton(
                 onPressed: _isLoading
                     ? null

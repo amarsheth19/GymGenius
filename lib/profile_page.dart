@@ -1,26 +1,71 @@
 import 'package:flutter/material.dart';
-import 'login_page.dart'; 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'login_page.dart';
+import 'main.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text("Profile"),
+        title: const Text("Profile"),
         actions: [
-          // Login Button in the AppBar
-          IconButton(
-            icon: Icon(Icons.account_box_rounded), //choose icon from lib
-            onPressed: () {
-              // Navigate to the LoginPage
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => LoginPage()),
-              );
-            },
-          ),
+          if (user != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Center(
+                child: GestureDetector(
+                  onTap: () async {
+                    await FirebaseAuth.instance.signOut();
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => const MainScreen()),
+                      (route) => false,
+                    );
+                  },
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.logout, color: Colors.black),
+                      SizedBox(width: 4),
+                      Text(
+                        "Log out",
+                        style: TextStyle(color: Colors.black, fontWeight: FontWeight.normal),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Center(
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginPage()),
+                    );
+                  },
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.login, color: Colors.black),
+                      SizedBox(width: 4),
+                      Text(
+                        "Sign in",
+                        style: TextStyle(color: Colors.black, fontWeight: FontWeight.normal),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
       body: Padding(
@@ -29,20 +74,17 @@ class ProfilePage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Profile Information
-              _buildProfileInfo(),
-              SizedBox(height: 20),
-
-              // Current Streak and Longest Streak
-              _buildStreakSection(),
-              SizedBox(height: 20),
-
-              // Badges Section
-              _buildBadgesSection(),
-              SizedBox(height: 20),
-
-              // Profile Status Section (Tier)
-              _buildProfileStatus(),
+              if (user == null)
+                const Center(child: Text("Please sign in to view your profile"))
+              else ...[
+                _buildProfileInfo(user),
+                const SizedBox(height: 20),
+                _buildStreakSection(),
+                const SizedBox(height: 20),
+                _buildBadgesSection(),
+                const SizedBox(height: 20),
+                _buildProfileStatus(),
+              ],
             ],
           ),
         ),
@@ -50,26 +92,24 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  // Profile Information Section
-  Widget _buildProfileInfo() {
+  Widget _buildProfileInfo(User user) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "John Doe",
-          style: TextStyle(
+          user.displayName ?? "User",
+          style: const TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
             color: Colors.blueAccent,
           ),
         ),
-        SizedBox(height: 8),
-        Text("Height: 5'10\" | Weight: 175 lbs | Age: 25 | Sex: Male"),
+        const SizedBox(height: 8),
+        Text(user.email ?? "No email"),
       ],
     );
   }
 
-  // Streak Section (Current & Longest Streak)
   Widget _buildStreakSection() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -80,89 +120,64 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  // Streak Info Helper
   Widget _buildStreakInfo(String label, int streakDays) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Row(
           children: [
-            Icon(
-              Icons.whatshot,
-              color: Colors.redAccent,
-              size: 24,
-            ),
-            SizedBox(width: 8),
-            Text(
-              "$streakDays days",
-              style: TextStyle(fontSize: 16),
-            ),
+            const Icon(Icons.whatshot, color: Colors.redAccent, size: 24),
+            const SizedBox(width: 8),
+            Text("$streakDays days", style: const TextStyle(fontSize: 16)),
           ],
         ),
       ],
     );
   }
 
-  // Badges Section
   Widget _buildBadgesSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           "Badges",
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         _buildBadgeInfo("Bench 225"),
       ],
     );
   }
 
-  // Badge Info Helper
   Widget _buildBadgeInfo(String badgeName) {
     return Row(
       children: [
-        Icon(
-          Icons.emoji_events,
-          color: Colors.yellowAccent,
-          size: 24,
-        ),
-        SizedBox(width: 8),
-        Text(
-          badgeName,
-          style: TextStyle(fontSize: 16),
-        ),
+        const Icon(Icons.emoji_events, color: Colors.yellowAccent, size: 24),
+        const SizedBox(width: 8),
+        Text(badgeName, style: const TextStyle(fontSize: 16)),
       ],
     );
   }
 
-  // Profile Status Section (User Tier)
   Widget _buildProfileStatus() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           "Profile Status",
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Row(
           children: [
-            Icon(
-              Icons.star,
-              color: Colors.grey,
-              size: 24,
-            ),
-            SizedBox(width: 8),
-            Text(
-              "Silver Tier",
-              style: TextStyle(fontSize: 16),
-            ),
+            const Icon(Icons.star, color: Colors.grey, size: 24),
+            const SizedBox(width: 8),
+            const Text("Silver Tier", style: TextStyle(fontSize: 16)),
           ],
         ),
       ],
