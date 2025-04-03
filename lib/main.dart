@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
-import 'suggestions_page.dart';
-import 'profile_page.dart';
-import 'dashboard_page.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'login_page.dart';
+import 'dashboard_page.dart';
+import 'suggestions_page.dart';
+import 'profile_page.dart';
+import 'progress_page.dart';
 
-
-
-void main() async{
-  WidgetsFlutterBinding.ensureInitialized(); // Ensures Flutter is ready before Firebase initializes
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -24,7 +24,26 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: MainScreen(),
+      home: const AuthWrapper(),
+    );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return const MainScreen(); // Always show MainScreen now
+      },
     );
   }
 }
@@ -33,14 +52,14 @@ class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
   @override
-  _MainScreenState createState() => _MainScreenState();
+  State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
-    const DashboardPage(), // Using the imported version
+    const DashboardPage(),
     const SuggestionsPage(),
     const ProgressPage(),
     const ProfilePage(),
@@ -53,6 +72,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Removed the AppBar completely
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
@@ -67,19 +87,6 @@ class _MainScreenState extends State<MainScreen> {
         unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,
       ),
-    );
-  }
-}
-
-// Progress Page (should be in its own file too)
-class ProgressPage extends StatelessWidget {
-  const ProgressPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Progress")),
-      body: const Center(child: Text("Track your progress over time!")),
     );
   }
 }

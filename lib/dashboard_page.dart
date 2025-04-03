@@ -6,7 +6,7 @@ class DashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: const Color.fromARGB(255, 245, 245, 245),
       appBar: AppBar(
         title: const Text('Muscle Map'),
         centerTitle: true,
@@ -81,6 +81,7 @@ class DashboardPage extends StatelessWidget {
                   // Legs
                   _buildMuscleZone(context, 'Left Leg', Colors.amber, 50, 100, 80, 190),
                   _buildMuscleZone(context, 'Right Leg', Colors.amber, 50, 100, 150, 190),
+                  
                 ],
               ),
             ),
@@ -117,18 +118,19 @@ class DashboardPage extends StatelessWidget {
             border: visible ? Border.all(color: color, width: 2) : null,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: visible
-              ? Center(
-                  child: Text(
-                    name.split(' ').first,
-                    style: TextStyle(
-                      color: color,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
+          child:
+              visible
+                  ? Center(
+                    child: Text(
+                      name.split(' ').first,
+                      style: TextStyle(
+                        color: color,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                     ),
-                  ),
-                )
-              : null,
+                  )
+                  : null,
         ),
       ),
     );
@@ -149,24 +151,28 @@ class DashboardPage extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: muscles.entries.map((entry) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: entry.value.withOpacity(0.2),
-                foregroundColor: entry.value,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  side: BorderSide(color: entry.value),
+        children:
+            muscles.entries.map((entry) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: entry.value.withValues(alpha: (0.1 * 255)),
+                    foregroundColor: entry.value,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(color: entry.value),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                  ),
+                  onPressed: () => _highlightMuscle(context, entry.key),
+                  child: Text(entry.key),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              ),
-              onPressed: () => _highlightMuscle(context, entry.key),
-              child: Text(entry.key),
-            ),
-          );
-        }).toList(),
+              );
+            }).toList(),
       ),
     );
   }
@@ -186,37 +192,38 @@ class DashboardPage extends StatelessWidget {
   void _showMuscleDetails(BuildContext context, String muscle, Color color) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(muscle, style: TextStyle(color: color)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Current Rank:'),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: color),
-              ),
-              child: Text(
-                _getRankFromColor(color),
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.bold,
+      builder:
+          (context) => AlertDialog(
+            title: Text(muscle, style: TextStyle(color: color)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Current Rank:'),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: (0.1 * 255)),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: color),
+                  ),
+                  child: Text(
+                    _getRankFromColor(color),
+                    style: TextStyle(color: color, fontWeight: FontWeight.bold),
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -270,31 +277,24 @@ class DashboardPage extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
             ),
           ),
-          Text(
-            muscle,
-            style: const TextStyle(fontWeight: FontWeight.w500),
-          ),
+          Text(muscle, style: const TextStyle(fontWeight: FontWeight.w500)),
           const Spacer(),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: rankColor.withOpacity(0.2),
+              color: rankColor.withValues(alpha: (0.2 * 255)),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: rankColor),
             ),
             child: Text(
               rank,
-              style: TextStyle(
-                color: rankColor,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(color: rankColor, fontWeight: FontWeight.bold),
             ),
           ),
         ],
       ),
     );
   }
-  
 
   Widget _buildMuscleRankingsSection() {
     return Container(
@@ -318,10 +318,7 @@ class DashboardPage extends StatelessWidget {
             children: [
               Text(
                 'Muscle Rankings ',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -351,47 +348,40 @@ class DashboardPage extends StatelessWidget {
 class _BodyPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
+
 
     // Draw torso
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromCenter(
-          center: Offset(size.width / 2, size.height / 2 - 20),
-          width: 120,
-          height: 140,
+
         ),
         const Radius.circular(20),
       ),
       paint,
     );
 
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: Offset(size.width / 2, size.height / 2 - 60),  // Position the head above torso
-          width: 40,  // Width and height for a circular head
-          height: 40, // Same height as width for a circle
-        ),
-        const Radius.circular(20),  // This will make the head circular
-      ),
-      paint,
-    );
-    
-    
     // Draw arms
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(30, 100, 40, 120),
+        Rect.fromLTWH(
+          centerX - (torsoWidth / 2) - armWidth - 2,
+          centerY - 20 - (torsoHeight / 2) + 8,
+          armWidth,
+          armHeight,
+        ),
         const Radius.circular(20),
       ),
       paint,
     );
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(size.width - 70, 100, 40, 120),
+        Rect.fromLTWH(
+          centerX + (torsoWidth / 2) + 2,
+          centerY - 20 - (torsoHeight / 2) + 8,
+          armWidth,
+          armHeight,
+        ),
         const Radius.circular(20),
       ),
       paint,
@@ -400,15 +390,20 @@ class _BodyPainter extends CustomPainter {
     // Draw legs
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(60, 200, 50, 140),
-        const Radius.circular(20),
+        Rect.fromLTWH(centerX - (torsoWidth / 2), 210, legWidth, legHeight),
+        const Radius.circular(10),
       ),
       paint,
     );
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(size.width - 110, 200, 50, 140),
-        const Radius.circular(20),
+        Rect.fromLTWH(
+          centerX + (torsoWidth / 2) - legWidth,
+          210,
+          legWidth,
+          legHeight,
+        ),
+        const Radius.circular(10),
       ),
       paint,
     );
