@@ -48,7 +48,7 @@ def framesInVideo():
 
         
 recording(output_file= "output.mp4") #Calls the function
-framesInVideo()
+framesInVideo() #Returns the frames in the videos as part of a directory called frame
 
 
 
