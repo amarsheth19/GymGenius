@@ -11,7 +11,7 @@ class RecordPage extends StatelessWidget {
         child: Container(
           width: 800,
           height: 400,
-          color: Colors.blue[200], // Just a solid color
+          color: Colors.red[200], // Just a solid color
           child: const Center(
             child: Text('Record Page', style: TextStyle(fontSize: 20)),
           ),
