@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 
 class ProgressPage extends StatefulWidget {
   const ProgressPage({super.key});
-
   @override
   State<ProgressPage> createState() => _ProgressPageState();
 }
@@ -15,7 +14,6 @@ class _ProgressPageState extends State<ProgressPage> {
   late DateTime _focusedDay;
   late DateTime _selectedDay;
   final Set<DateTime> _workoutDays = {};
-
   @override
   void initState() {
     super.initState();
@@ -50,10 +48,7 @@ class _ProgressPageState extends State<ProgressPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-<<<<<<< Updated upstream
-      appBar: AppBar(
-        title: const Text('Progress Tracking'),
-      ),
+      appBar: AppBar(title: const Text('Progress Tracking')),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -75,35 +70,30 @@ class _ProgressPageState extends State<ProgressPage> {
                     fontWeight: FontWeight.bold,
                     color: Colors.blueAccent,
                   ),
-=======
-      appBar: AppBar(title: const Text('Progress Tracking')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (user == null)
-              const Center(
-                child: Text(
-                  'Please sign in to view your progress',
-                  style: TextStyle(fontSize: 18),
->>>>>>> Stashed changes
                 ),
                 const SizedBox(height: 20),
-                _buildProgressCard('Weekly Workouts', '${_workoutDays.length} days', Icons.fitness_center),
+                _buildProgressCard(
+                  'Weekly Workouts',
+                  '${_workoutDays.length} days',
+                  Icons.fitness_center,
+                ),
                 const SizedBox(height: 15),
-                _buildProgressCard('Weight Change', '-2.5 kg', Icons.monitor_weight),
+                _buildProgressCard(
+                  'Weight Change',
+                  '-2.5 kg',
+                  Icons.monitor_weight,
+                ),
                 const SizedBox(height: 15),
-                _buildProgressCard('Running Distance', '15.3 km', Icons.directions_run),
+                _buildProgressCard(
+                  'Running Distance',
+                  '15.3 km',
+                  Icons.directions_run,
+                ),
                 const SizedBox(height: 25),
                 const Text(
                   'Workout Calendar',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
-<<<<<<< Updated upstream
                 const SizedBox(height: 10),
                 Card(
                   elevation: 4,
@@ -113,7 +103,8 @@ class _ProgressPageState extends State<ProgressPage> {
                       firstDay: DateTime.utc(2020, 1, 1),
                       lastDay: DateTime.utc(2030, 12, 31),
                       focusedDay: _focusedDay,
-                      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                      selectedDayPredicate:
+                          (day) => isSameDay(_selectedDay, day),
                       onDaySelected: _onDaySelected,
                       onPageChanged: (focusedDay) {
                         _focusedDay = focusedDay;
@@ -140,7 +131,11 @@ class _ProgressPageState extends State<ProgressPage> {
                       ),
                       calendarBuilders: CalendarBuilders(
                         markerBuilder: (context, day, events) {
-                          final normalizedDay = DateTime(day.year, day.month, day.day);
+                          final normalizedDay = DateTime(
+                            day.year,
+                            day.month,
+                            day.day,
+                          );
                           if (_workoutDays.contains(normalizedDay)) {
                             return Positioned(
                               bottom: 1,
@@ -165,54 +160,22 @@ class _ProgressPageState extends State<ProgressPage> {
                   child: ElevatedButton(
                     onPressed: () => _toggleWorkoutDay(_selectedDay),
                     child: Text(
-                      _workoutDays.contains(DateTime(_selectedDay.year, _selectedDay.month, _selectedDay.day))
+                      _workoutDays.contains(
+                            DateTime(
+                              _selectedDay.year,
+                              _selectedDay.month,
+                              _selectedDay.day,
+                            ),
+                          )
                           ? 'Remove Workout for ${DateFormat('MMM d').format(_selectedDay)}'
                           : 'Add Workout for ${DateFormat('MMM d').format(_selectedDay)}',
                     ),
                   ),
-=======
-              ),
-              const SizedBox(height: 20),
-              _buildProgressCard(
-                'Weekly Workouts',
-                '5/7 days',
-                Icons.fitness_center,
-              ),
-              const SizedBox(height: 15),
-              _buildProgressCard(
-                'Weight Change',
-                '-2.5 kg',
-                Icons.monitor_weight,
-              ),
-              const SizedBox(height: 15),
-              _buildProgressCard(
-                'Running Distance',
-                '15.3 km',
-                Icons.directions_run,
-              ),
-              const SizedBox(height: 25),
-              const Text(
-                'Monthly Trends',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              Expanded(
-                child: ListView(
-                  children: [
-                    _buildTrendItem('Week 1', 70),
-                    _buildTrendItem('Week 2', 80),
-                    _buildTrendItem('Week 3', 90),
-                    _buildTrendItem('Week 4', 85),
-                  ],
->>>>>>> Stashed changes
                 ),
                 const SizedBox(height: 25),
                 const Text(
                   'Monthly Trends',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
                 SizedBox(
@@ -280,14 +243,9 @@ class _ProgressPageState extends State<ProgressPage> {
             minHeight: 10,
           ),
           const SizedBox(height: 4),
-          Text('$percentage% of goal achieved'),
+          Text('${percentage}% of goal achieved'),
         ],
       ),
     );
   }
 }
-<<<<<<< Updated upstream
-
-//pull
-=======
->>>>>>> Stashed changes

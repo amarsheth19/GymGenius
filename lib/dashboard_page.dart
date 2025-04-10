@@ -18,7 +18,7 @@ class DashboardPage extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              //_buildHeaderSection(),
+              // _buildHeaderSection(), // Uncomment if you want to use this section.
               const SizedBox(height: 24),
               _buildInteractiveBodyGraph(context),
               const SizedBox(height: 24),
@@ -54,99 +54,7 @@ class DashboardPage extends StatelessWidget {
               painter: _BodyPainter(),
               child: Stack(
                 children: [
-                  Positioned(
-                    top: 5, // Adjust the position to place it above the torso
-                    left: 120, // Center it horizontally
-                    child: Container(
-                      width: 40, // Circular head width
-                      height: 40, // Circular head height
-                      decoration: BoxDecoration(
-                        color: Colors.grey, // Head color
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
                   // Chest and Back
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
-                  _buildMuscleZone(
-                    context,
-                    'Chest',
-                    Colors.amber,
-                    120,
-                    80,
-                    80,
-                    50,
-                  ),
-                  _buildMuscleZone(
-                    context,
-                    'Back',
-                    Colors.brown,
-                    120,
-                    80,
-                    80,
-                    90,
-                  ),
-
-                  // Arms
-                  _buildMuscleZone(
-                    context,
-                    'Left Arm',
-                    Colors.blue,
-                    40,
-                    100,
-                    50,
-                    100,
-                  ),
-                  _buildMuscleZone(
-                    context,
-                    'Right Arm',
-                    Colors.blue,
-                    40,
-                    100,
-                    190,
-                    100,
-                  ),
-
-                  // Core
-                  _buildMuscleZone(
-                    context,
-                    'Abs',
-                    Colors.green,
-                    100,
-                    60,
-                    90,
-                    150,
-                  ),
-
-                  // Legs
-                  _buildMuscleZone(
-                    context,
-                    'Left Leg',
-                    Colors.purple,
-                    50,
-                    120,
-                    80,
-=======
->>>>>>> Stashed changes
-<<<<<<< Updated upstream
-                  _buildMuscleZone(context, 'Back', Colors.brown, 120, 25, 80, 55),
-                  _buildMuscleZone(context, 'Chest', Colors.amber, 120, 70, 80, 80),
-                  
-                  
-                  // Arms
-                  _buildMuscleZone(context, 'Left Arm', Colors.brown, 40, 100, 40, 70),
-                  _buildMuscleZone(context, 'Right Arm', Colors.brown, 40, 100, 200, 70),
-                  
-                  // Core
-                  _buildMuscleZone(context, 'Abs', Colors.grey, 65, 65, 110, 135),
-                  
-                  // Legs
-                  _buildMuscleZone(context, 'Left Leg', Colors.amber, 50, 100, 80, 190),
-                  _buildMuscleZone(context, 'Right Leg', Colors.amber, 50, 100, 150, 190),
-                  
-=======
                   _buildMuscleZone(
                     context,
                     'Back',
@@ -156,7 +64,6 @@ class DashboardPage extends StatelessWidget {
                     640,
                     70,
                   ),
-
                   _buildMuscleZone(
                     context,
                     'Chest',
@@ -166,7 +73,6 @@ class DashboardPage extends StatelessWidget {
                     640,
                     60,
                   ),
-
                   // Arms
                   _buildMuscleZone(
                     context,
@@ -186,8 +92,7 @@ class DashboardPage extends StatelessWidget {
                     740,
                     60,
                   ),
-
-                  //forarms
+                  // Forearms
                   _buildMuscleZone(
                     context,
                     'Left Forearm',
@@ -197,7 +102,6 @@ class DashboardPage extends StatelessWidget {
                     602,
                     135,
                   ),
-
                   _buildMuscleZone(
                     context,
                     'Right Forearm',
@@ -207,7 +111,6 @@ class DashboardPage extends StatelessWidget {
                     742,
                     135,
                   ),
-
                   // Core
                   _buildMuscleZone(
                     context,
@@ -218,7 +121,6 @@ class DashboardPage extends StatelessWidget {
                     640,
                     140,
                   ),
-
                   // Legs
                   _buildMuscleZone(
                     context,
@@ -227,26 +129,10 @@ class DashboardPage extends StatelessWidget {
                     40,
                     60,
                     640,
-<<<<<<< Updated upstream
-=======
->>>>>>> 05a67f9febe8a9488b234af6f1732efeaa1da2c4
->>>>>>> Stashed changes
                     200,
                   ),
                   _buildMuscleZone(
                     context,
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
-                    'Right Leg',
-                    Colors.purple,
-                    50,
-                    120,
-                    150,
-                    200,
-                  ),
-=======
->>>>>>> Stashed changes
                     'Right Upper Leg',
                     Colors.purple,
                     40,
@@ -254,8 +140,7 @@ class DashboardPage extends StatelessWidget {
                     700,
                     200,
                   ),
-
-                  //lower legs
+                  // Lower Legs
                   _buildMuscleZone(
                     context,
                     'Left Calf',
@@ -265,7 +150,6 @@ class DashboardPage extends StatelessWidget {
                     640,
                     260,
                   ),
-
                   _buildMuscleZone(
                     context,
                     'Right Calf',
@@ -275,11 +159,6 @@ class DashboardPage extends StatelessWidget {
                     700,
                     260,
                   ),
->>>>>>> Stashed changes
-<<<<<<< Updated upstream
-=======
->>>>>>> 05a67f9febe8a9488b234af6f1732efeaa1da2c4
->>>>>>> Stashed changes
                 ],
               ),
             ),
@@ -339,17 +218,11 @@ class DashboardPage extends StatelessWidget {
   Widget _buildMuscleButtonsRow(BuildContext context) {
     final muscles = {
       'Chest': Colors.amber,
-<<<<<<< Updated upstream
-      'Arms': Colors.brown,
-      'Core': Colors.grey,
-      'Legs': Colors.amber,
-=======
       'Upper Arms': Colors.blue,
       'Lower Arms': Colors.red,
       'Core': Colors.green,
       'Upper Legs': Colors.purple,
       'Lower Legs': Colors.orange,
->>>>>>> Stashed changes
       'Back': Colors.brown,
     };
 
@@ -363,7 +236,7 @@ class DashboardPage extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: entry.value.withValues(alpha: (0.1 * 255)),
+                    backgroundColor: entry.value.withOpacity(0.1),
                     foregroundColor: entry.value,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
@@ -412,7 +285,7 @@ class DashboardPage extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: (0.1 * 255)),
+                    color: color.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: color),
                   ),
@@ -434,42 +307,6 @@ class DashboardPage extends StatelessWidget {
   }
 
   // ========== SUPPORTING WIDGETS ========== //
-
-<<<<<<< Updated upstream
-  // Widget _buildHeaderSection() {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       const Text(
-  //         'Instantly Identify\nMuscles To Improve',
-  //         style: TextStyle(
-  //           fontSize: 24,
-  //           fontWeight: FontWeight.bold,
-  //           height: 1.2,
-  //         ),
-  //       ),
-  //       const SizedBox(height: 16),
-  //     ],
-  //   );
-  // }
-=======
-  Widget _buildHeaderSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Instantly Identify Muscles To Improve',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            height: 1.2,
-          ),
-        ),
-        const SizedBox(height: 16),
-      ],
-    );
-  }
->>>>>>> Stashed changes
 
   Widget _buildRankingItem(String muscle, String rank, bool isChecked) {
     Color rankColor;
@@ -507,7 +344,7 @@ class DashboardPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: rankColor.withValues(alpha: (0.2 * 255)),
+              color: rankColor.withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: rankColor),
             ),
@@ -562,8 +399,7 @@ class DashboardPage extends StatelessWidget {
     if (color == Colors.amber) return 'GOLD';
     if (color == Colors.blue) return 'SILVER';
     if (color == Colors.green) return 'CHAMPION';
-    if (color == Colors.brown) return 'Bronze';
-    if (color == Colors.amber) return 'GOLD I';
+    if (color == Colors.brown) return 'BRONZE';
     return 'BRONZE';
   }
 }
@@ -573,15 +409,11 @@ class DashboardPage extends StatelessWidget {
 class _BodyPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-<<<<<<< Updated upstream
-
-=======
-<<<<<<< HEAD
-    // variables for use
     final paint =
         Paint()
           ..color = Colors.grey[200]!
           ..style = PaintingStyle.fill;
+
     final centerX = size.width / 2;
     final centerY = size.height / 2;
     final torsoWidth = 100.0;
@@ -591,47 +423,33 @@ class _BodyPainter extends CustomPainter {
     final armHeight = 135.0;
     final legWidth = 40.0;
     final legHeight = 120.0;
-=======
-
->>>>>>> 05a67f9febe8a9488b234af6f1732efeaa1da2c4
->>>>>>> Stashed changes
 
     // Draw torso
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromCenter(
-<<<<<<< Updated upstream
-
-=======
-<<<<<<< HEAD
           center: Offset(centerX, centerY - 20),
           width: torsoWidth,
           height: torsoHeight,
-=======
-
->>>>>>> 05a67f9febe8a9488b234af6f1732efeaa1da2c4
->>>>>>> Stashed changes
         ),
         const Radius.circular(20),
       ),
       paint,
     );
 
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
     // Draw head
-    canvas.drawCircle(Offset(centerX, 20), headRadius, paint);
+    canvas.drawCircle(
+      Offset(centerX, 30), // Adjusted centerX to ensure correct placement
+      headRadius,
+      paint,
+    );
 
-=======
->>>>>>> 05a67f9febe8a9488b234af6f1732efeaa1da2c4
->>>>>>> Stashed changes
     // Draw arms
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(
-          centerX - (torsoWidth / 2) - armWidth - 2,
-          centerY - 20 - (torsoHeight / 2) + 8,
+          centerX - torsoWidth / 2 - armWidth - 2,
+          centerY - torsoHeight / 2 + 8,
           armWidth,
           armHeight,
         ),
@@ -642,8 +460,8 @@ class _BodyPainter extends CustomPainter {
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(
-          centerX + (torsoWidth / 2) + 2,
-          centerY - 20 - (torsoHeight / 2) + 8,
+          centerX + torsoWidth / 2 + 2,
+          centerY - torsoHeight / 2 + 8,
           armWidth,
           armHeight,
         ),
@@ -655,20 +473,25 @@ class _BodyPainter extends CustomPainter {
     // Draw legs
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(centerX - (torsoWidth / 2), 210, legWidth, legHeight),
-        const Radius.circular(10),
+        Rect.fromLTWH(
+          centerX - torsoWidth / 2,
+          centerY + torsoHeight / 2,
+          legWidth,
+          legHeight,
+        ),
+        const Radius.circular(20),
       ),
       paint,
     );
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(
-          centerX + (torsoWidth / 2) - legWidth,
-          210,
+          centerX + torsoWidth / 2 - legWidth,
+          centerY + torsoHeight / 2,
           legWidth,
           legHeight,
         ),
-        const Radius.circular(10),
+        const Radius.circular(20),
       ),
       paint,
     );
@@ -677,11 +500,3 @@ class _BodyPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
-
-=======
->>>>>>> 05a67f9febe8a9488b234af6f1732efeaa1da2c4
->>>>>>> Stashed changes
