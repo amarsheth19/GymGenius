@@ -14,6 +14,17 @@ class _ProgressPageState extends State<ProgressPage> {
   late DateTime _focusedDay;
   late DateTime _selectedDay;
   final Set<DateTime> _workoutDays = {};
+  
+  // Tier progress variables
+  final String _currentTier = 'silver'; // Example: current tier
+  final int _currentPoints = 650; // Example: current points
+  final Map<String, int> _tierRequirements = {
+    'bronze': 0,
+    'silver': 500,
+    'gold': 1000,
+    'champion': 2000,
+  };
+  
   @override
   void initState() {
     super.initState();
@@ -47,6 +58,16 @@ class _ProgressPageState extends State<ProgressPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Calculate tier progress
+    final tiers = _tierRequirements.keys.toList();
+    final currentIndex = tiers.indexOf(_currentTier);
+    final nextTier = currentIndex < tiers.length - 1 ? tiers[currentIndex + 1] : null;
+    final currentRequirement = _tierRequirements[_currentTier]!;
+    final nextRequirement = nextTier != null ? _tierRequirements[nextTier]! : _tierRequirements[_currentTier]!;
+    final progress = nextTier != null 
+        ? (_currentPoints - currentRequirement) / (nextRequirement - currentRequirement)
+        : 1.0;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Progress Tracking')),
       body: SingleChildScrollView(
@@ -72,6 +93,84 @@ class _ProgressPageState extends State<ProgressPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
+                
+                // Tier Progress Section
+                Card(
+                  elevation: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Tier Progress',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: _getTierColor(_currentTier).withOpacity(0.2),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: _getTierColor(_currentTier), width: 2),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  _currentTier[0].toUpperCase(),
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: _getTierColor(_currentTier),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Current Tier: ${_currentTier[0].toUpperCase()}${_currentTier.substring(1)}',
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  if (nextTier != null)
+                                    Text(
+                                      'Progress to ${nextTier[0].toUpperCase()}${nextTier.substring(1)}: ${(_currentPoints - currentRequirement)}/${nextRequirement - currentRequirement} points',
+                                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                                    )
+                                  else
+                                    const Text(
+                                      'You\'ve reached the highest tier!',
+                                      style: TextStyle(fontSize: 14, color: Colors.green),
+                                    ),
+                                  const SizedBox(height: 8),
+                                  LinearProgressIndicator(
+                                    value: progress,
+                                    backgroundColor: Colors.grey[200],
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      _getTierColor(_currentTier),
+                                    ),
+                                    minHeight: 10,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 15),
+
                 _buildProgressCard(
                   'Weekly Workouts',
                   '${_workoutDays.length} days',
@@ -174,7 +273,7 @@ class _ProgressPageState extends State<ProgressPage> {
                 ),
                 const SizedBox(height: 25),
                 const Text(
-                  'Monthly Trends',
+                  'Badge Progress',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
@@ -182,10 +281,10 @@ class _ProgressPageState extends State<ProgressPage> {
                   height: 200, // Fixed height for the trends section
                   child: ListView(
                     children: [
-                      _buildTrendItem('Week 1', 70),
-                      _buildTrendItem('Week 2', 80),
-                      _buildTrendItem('Week 3', 90),
-                      _buildTrendItem('Week 4', 85),
+                      _buildTrendItem('Badge 1', 70),
+                      _buildTrendItem('Badge 2', 80),
+                      _buildTrendItem('Badge 3', 90),
+                      _buildTrendItem('Badge 4', 85),
                     ],
                   ),
                 ),
@@ -247,5 +346,20 @@ class _ProgressPageState extends State<ProgressPage> {
         ],
       ),
     );
+  }
+
+  Color _getTierColor(String tier) {
+    switch (tier) {
+      case 'bronze':
+        return const Color(0xFFCD7F32);
+      case 'silver':
+        return const Color(0xFFC0C0C0);
+      case 'gold':
+        return const Color(0xFFFFD700);
+      case 'champion':
+        return const Color(0xFFE0115F);
+      default:
+        return Colors.blue;
+    }
   }
 }
