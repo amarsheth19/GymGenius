@@ -50,6 +50,7 @@ class _ProgressPageState extends State<ProgressPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+<<<<<<< Updated upstream
       appBar: AppBar(
         title: const Text('Progress Tracking'),
       ),
@@ -74,6 +75,19 @@ class _ProgressPageState extends State<ProgressPage> {
                     fontWeight: FontWeight.bold,
                     color: Colors.blueAccent,
                   ),
+=======
+      appBar: AppBar(title: const Text('Progress Tracking')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (user == null)
+              const Center(
+                child: Text(
+                  'Please sign in to view your progress',
+                  style: TextStyle(fontSize: 18),
+>>>>>>> Stashed changes
                 ),
                 const SizedBox(height: 20),
                 _buildProgressCard('Weekly Workouts', '${_workoutDays.length} days', Icons.fitness_center),
@@ -89,6 +103,7 @@ class _ProgressPageState extends State<ProgressPage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+<<<<<<< Updated upstream
                 const SizedBox(height: 10),
                 Card(
                   elevation: 4,
@@ -155,6 +170,41 @@ class _ProgressPageState extends State<ProgressPage> {
                           : 'Add Workout for ${DateFormat('MMM d').format(_selectedDay)}',
                     ),
                   ),
+=======
+              ),
+              const SizedBox(height: 20),
+              _buildProgressCard(
+                'Weekly Workouts',
+                '5/7 days',
+                Icons.fitness_center,
+              ),
+              const SizedBox(height: 15),
+              _buildProgressCard(
+                'Weight Change',
+                '-2.5 kg',
+                Icons.monitor_weight,
+              ),
+              const SizedBox(height: 15),
+              _buildProgressCard(
+                'Running Distance',
+                '15.3 km',
+                Icons.directions_run,
+              ),
+              const SizedBox(height: 25),
+              const Text(
+                'Monthly Trends',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              Expanded(
+                child: ListView(
+                  children: [
+                    _buildTrendItem('Week 1', 70),
+                    _buildTrendItem('Week 2', 80),
+                    _buildTrendItem('Week 3', 90),
+                    _buildTrendItem('Week 4', 85),
+                  ],
+>>>>>>> Stashed changes
                 ),
                 const SizedBox(height: 25),
                 const Text(
@@ -198,10 +248,7 @@ class _ProgressPageState extends State<ProgressPage> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
+                  style: const TextStyle(fontSize: 16, color: Colors.grey),
                 ),
                 Text(
                   value,
@@ -224,10 +271,7 @@ class _ProgressPageState extends State<ProgressPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            week,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
+          Text(week, style: const TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
           LinearProgressIndicator(
             value: percentage / 100,
@@ -236,11 +280,14 @@ class _ProgressPageState extends State<ProgressPage> {
             minHeight: 10,
           ),
           const SizedBox(height: 4),
-          Text('${percentage}% of goal achieved'),
+          Text('$percentage% of goal achieved'),
         ],
       ),
     );
   }
 }
+<<<<<<< Updated upstream
 
 //pull
+=======
+>>>>>>> Stashed changes
