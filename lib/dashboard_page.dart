@@ -68,6 +68,69 @@ class DashboardPage extends StatelessWidget {
                   ),
                   // Chest and Back
 <<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+                  _buildMuscleZone(
+                    context,
+                    'Chest',
+                    Colors.amber,
+                    120,
+                    80,
+                    80,
+                    50,
+                  ),
+                  _buildMuscleZone(
+                    context,
+                    'Back',
+                    Colors.brown,
+                    120,
+                    80,
+                    80,
+                    90,
+                  ),
+
+                  // Arms
+                  _buildMuscleZone(
+                    context,
+                    'Left Arm',
+                    Colors.blue,
+                    40,
+                    100,
+                    50,
+                    100,
+                  ),
+                  _buildMuscleZone(
+                    context,
+                    'Right Arm',
+                    Colors.blue,
+                    40,
+                    100,
+                    190,
+                    100,
+                  ),
+
+                  // Core
+                  _buildMuscleZone(
+                    context,
+                    'Abs',
+                    Colors.green,
+                    100,
+                    60,
+                    90,
+                    150,
+                  ),
+
+                  // Legs
+                  _buildMuscleZone(
+                    context,
+                    'Left Leg',
+                    Colors.purple,
+                    50,
+                    120,
+                    80,
+=======
+>>>>>>> Stashed changes
+<<<<<<< Updated upstream
                   _buildMuscleZone(context, 'Back', Colors.brown, 120, 25, 80, 55),
                   _buildMuscleZone(context, 'Chest', Colors.amber, 120, 70, 80, 80),
                   
@@ -164,10 +227,26 @@ class DashboardPage extends StatelessWidget {
                     40,
                     60,
                     640,
+<<<<<<< Updated upstream
+=======
+>>>>>>> 05a67f9febe8a9488b234af6f1732efeaa1da2c4
+>>>>>>> Stashed changes
                     200,
                   ),
                   _buildMuscleZone(
                     context,
+<<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+                    'Right Leg',
+                    Colors.purple,
+                    50,
+                    120,
+                    150,
+                    200,
+                  ),
+=======
+>>>>>>> Stashed changes
                     'Right Upper Leg',
                     Colors.purple,
                     40,
@@ -196,6 +275,10 @@ class DashboardPage extends StatelessWidget {
                     700,
                     260,
                   ),
+>>>>>>> Stashed changes
+<<<<<<< Updated upstream
+=======
+>>>>>>> 05a67f9febe8a9488b234af6f1732efeaa1da2c4
 >>>>>>> Stashed changes
                 ],
               ),
@@ -490,19 +573,59 @@ class DashboardPage extends StatelessWidget {
 class _BodyPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
+<<<<<<< Updated upstream
 
+=======
+<<<<<<< HEAD
+    // variables for use
+    final paint =
+        Paint()
+          ..color = Colors.grey[200]!
+          ..style = PaintingStyle.fill;
+    final centerX = size.width / 2;
+    final centerY = size.height / 2;
+    final torsoWidth = 100.0;
+    final torsoHeight = 160.0;
+    final headRadius = 30.0;
+    final armWidth = 35.0;
+    final armHeight = 135.0;
+    final legWidth = 40.0;
+    final legHeight = 120.0;
+=======
+
+>>>>>>> 05a67f9febe8a9488b234af6f1732efeaa1da2c4
+>>>>>>> Stashed changes
 
     // Draw torso
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromCenter(
+<<<<<<< Updated upstream
 
+=======
+<<<<<<< HEAD
+          center: Offset(centerX, centerY - 20),
+          width: torsoWidth,
+          height: torsoHeight,
+=======
+
+>>>>>>> 05a67f9febe8a9488b234af6f1732efeaa1da2c4
+>>>>>>> Stashed changes
         ),
         const Radius.circular(20),
       ),
       paint,
     );
 
+<<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+    // Draw head
+    canvas.drawCircle(Offset(centerX, 20), headRadius, paint);
+
+=======
+>>>>>>> 05a67f9febe8a9488b234af6f1732efeaa1da2c4
+>>>>>>> Stashed changes
     // Draw arms
     canvas.drawRRect(
       RRect.fromRectAndRadius(
@@ -555,3 +678,10 @@ class _BodyPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
+<<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+
+=======
+>>>>>>> 05a67f9febe8a9488b234af6f1732efeaa1da2c4
+>>>>>>> Stashed changes
