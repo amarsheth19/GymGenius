@@ -67,6 +67,7 @@ class DashboardPage extends StatelessWidget {
                     ),
                   ),
                   // Chest and Back
+<<<<<<< Updated upstream
                   _buildMuscleZone(context, 'Back', Colors.brown, 120, 25, 80, 55),
                   _buildMuscleZone(context, 'Chest', Colors.amber, 120, 70, 80, 80),
                   
@@ -82,6 +83,120 @@ class DashboardPage extends StatelessWidget {
                   _buildMuscleZone(context, 'Left Leg', Colors.amber, 50, 100, 80, 190),
                   _buildMuscleZone(context, 'Right Leg', Colors.amber, 50, 100, 150, 190),
                   
+=======
+                  _buildMuscleZone(
+                    context,
+                    'Back',
+                    Colors.brown,
+                    100,
+                    100,
+                    640,
+                    70,
+                  ),
+
+                  _buildMuscleZone(
+                    context,
+                    'Chest',
+                    Colors.amber,
+                    100,
+                    60,
+                    640,
+                    60,
+                  ),
+
+                  // Arms
+                  _buildMuscleZone(
+                    context,
+                    'Left Arm',
+                    Colors.blue,
+                    40,
+                    70,
+                    600,
+                    60,
+                  ),
+                  _buildMuscleZone(
+                    context,
+                    'Right Arm',
+                    Colors.blue,
+                    40,
+                    70,
+                    740,
+                    60,
+                  ),
+
+                  //forarms
+                  _buildMuscleZone(
+                    context,
+                    'Left Forearm',
+                    Colors.red,
+                    35,
+                    50,
+                    602,
+                    135,
+                  ),
+
+                  _buildMuscleZone(
+                    context,
+                    'Right Forearm',
+                    Colors.red,
+                    35,
+                    50,
+                    742,
+                    135,
+                  ),
+
+                  // Core
+                  _buildMuscleZone(
+                    context,
+                    'Abs',
+                    Colors.green,
+                    100,
+                    60,
+                    640,
+                    140,
+                  ),
+
+                  // Legs
+                  _buildMuscleZone(
+                    context,
+                    'Left Upper Leg',
+                    Colors.purple,
+                    40,
+                    60,
+                    640,
+                    200,
+                  ),
+                  _buildMuscleZone(
+                    context,
+                    'Right Upper Leg',
+                    Colors.purple,
+                    40,
+                    60,
+                    700,
+                    200,
+                  ),
+
+                  //lower legs
+                  _buildMuscleZone(
+                    context,
+                    'Left Calf',
+                    Colors.orange,
+                    40,
+                    60,
+                    640,
+                    260,
+                  ),
+
+                  _buildMuscleZone(
+                    context,
+                    'Right Calf',
+                    Colors.orange,
+                    40,
+                    60,
+                    700,
+                    260,
+                  ),
+>>>>>>> Stashed changes
                 ],
               ),
             ),
@@ -141,9 +256,17 @@ class DashboardPage extends StatelessWidget {
   Widget _buildMuscleButtonsRow(BuildContext context) {
     final muscles = {
       'Chest': Colors.amber,
+<<<<<<< Updated upstream
       'Arms': Colors.brown,
       'Core': Colors.grey,
       'Legs': Colors.amber,
+=======
+      'Upper Arms': Colors.blue,
+      'Lower Arms': Colors.red,
+      'Core': Colors.green,
+      'Upper Legs': Colors.purple,
+      'Lower Legs': Colors.orange,
+>>>>>>> Stashed changes
       'Back': Colors.brown,
     };
 
@@ -229,6 +352,7 @@ class DashboardPage extends StatelessWidget {
 
   // ========== SUPPORTING WIDGETS ========== //
 
+<<<<<<< Updated upstream
   // Widget _buildHeaderSection() {
   //   return Column(
   //     crossAxisAlignment: CrossAxisAlignment.start,
@@ -245,6 +369,24 @@ class DashboardPage extends StatelessWidget {
   //     ],
   //   );
   // }
+=======
+  Widget _buildHeaderSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Instantly Identify Muscles To Improve',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            height: 1.2,
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+>>>>>>> Stashed changes
 
   Widget _buildRankingItem(String muscle, String rank, bool isChecked) {
     Color rankColor;
