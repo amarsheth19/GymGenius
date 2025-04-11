@@ -2,12 +2,13 @@ import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:video_player/video_player.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 class RecordPage extends StatefulWidget {
   const RecordPage({super.key});
-  final user = FirebaseAuth.instance.currentUser;
-
 
   @override
   State<RecordPage> createState() => _RecordPageState();
@@ -17,53 +18,169 @@ class _RecordPageState extends State<RecordPage> {
   CameraController? _cameraController;
   late Future<void> _initializeCameraFuture;
   bool _isRecording = false;
+  bool _isPaused = false;
   bool _isCameraReady = false;
+  bool _workoutSaved = false;
   Timer? _timer;
   int _secondsElapsed = 0;
+  int _totalWorkoutSeconds = 0;
   VideoPlayerController? _videoController;
+  DateTime? _workoutStartTime;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  User? _currentUser;
+  String _userEmail = '';
 
   @override
   void initState() {
     super.initState();
-    _initializeCamera();
+    _currentUser = _auth.currentUser;
+    _userEmail = _currentUser?.email ?? 'Not logged in';
+    _initializeFirebaseAndCamera();
+    _resetWorkoutData();
   }
 
-  Future<void> _initializeCamera() async {
-    final cameras = await availableCameras();
-    final firstCamera = cameras.firstWhere(
-      (camera) => camera.lensDirection == CameraLensDirection.back,
-      orElse: () => cameras.first,
-    );
+  Future<void> _resetWorkoutData() async {
+    setState(() {
+      _secondsElapsed = 0;
+      _totalWorkoutSeconds = 0;
+      _isRecording = false;
+      _isPaused = false;
+      _workoutSaved = false;
+    });
+    _videoController?.dispose();
+    _videoController = null;
+  }
 
-    _cameraController = CameraController(
-      firstCamera,
-      ResolutionPreset.medium,
-    );
+  Future<void> _initializeFirebaseAndCamera() async {
+    try {
+      await Firebase.initializeApp();
+      
+      final cameras = await availableCameras();
+      final firstCamera = cameras.firstWhere(
+        (camera) => camera.lensDirection == CameraLensDirection.back,
+        orElse: () => cameras.first,
+      );
 
-    _initializeCameraFuture = _cameraController!.initialize().then((_) {
-      if (!mounted) return;
-      setState(() => _isCameraReady = true);
+      _cameraController = CameraController(
+        firstCamera,
+        ResolutionPreset.medium,
+        enableAudio: false,
+      );
+
+      _initializeCameraFuture = _cameraController!.initialize().then((_) {
+        if (!mounted) return;
+        setState(() => _isCameraReady = true);
+      });
+    } catch (e) {
+      debugPrint('Initialization error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Initialization failed: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _startRecording() async {
+    if (!_isCameraReady) return;
+    
+    await _resetWorkoutData();
+    
+    _workoutStartTime = DateTime.now();
+    await _cameraController!.startVideoRecording();
+    _startTimer();
+    setState(() {
+      _isRecording = true;
+      _isPaused = false;
     });
   }
 
-  Future<void> _toggleRecording() async {
-    if (!_isCameraReady) return;
+  Future<void> _pauseRecording() async {
+    if (!_isRecording || _isPaused) return;
+    
+    await _cameraController!.pauseVideoRecording();
+    _stopTimer();
+    setState(() => _isPaused = true);
+  }
 
-    if (!_isRecording) {
-      await _cameraController!.startVideoRecording();
-      _startTimer();
-    } else {
+  Future<void> _resumeRecording() async {
+    if (!_isRecording || !_isPaused) return;
+    
+    await _cameraController!.resumeVideoRecording();
+    _startTimer();
+    setState(() => _isPaused = false);
+  }
+
+  Future<void> _endWorkout() async {
+    if (!_isRecording) return;
+    
+    try {
       final file = await _cameraController!.stopVideoRecording();
       _stopTimer();
       _previewVideo(file);
+      
+      await _saveWorkoutData();
+      
+      setState(() {
+        _isRecording = false;
+        _isPaused = false;
+        _workoutSaved = true;
+      });
+      
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          setState(() => _workoutSaved = false);
+        }
+      });
+    } catch (e) {
+      debugPrint('Workout save error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving workout: ${e.toString()}'),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+      setState(() {
+        _isRecording = false;
+        _isPaused = false;
+      });
     }
+  }
 
-    setState(() => _isRecording = !_isRecording);
+  Future<void> _saveWorkoutData() async {
+    try {
+      if (_currentUser == null) {
+        throw Exception('User not authenticated');
+      }
+
+      await _firestore
+          .collection('userWorkouts')
+          .doc(_currentUser!.uid)
+          .collection('workouts')
+          .add({
+            'duration': _totalWorkoutSeconds,
+            'date': FieldValue.serverTimestamp(),
+            'startTime': Timestamp.fromDate(_workoutStartTime!),
+            'endTime': Timestamp.now(),
+            'userId': _currentUser!.uid,
+            'userEmail': _currentUser!.email,
+          });
+    } catch (e, stackTrace) {
+      debugPrint('Firestore error: $e');
+      debugPrint('Stack trace: $stackTrace');
+      rethrow;
+    }
   }
 
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() => _secondsElapsed++);
+      setState(() {
+        _secondsElapsed++;
+        _totalWorkoutSeconds++;
+      });
     });
   }
 
@@ -73,6 +190,7 @@ class _RecordPageState extends State<RecordPage> {
   }
 
   void _previewVideo(XFile file) {
+    _videoController?.dispose();
     _videoController = VideoPlayerController.file(File(file.path))
       ..initialize().then((_) {
         if (!mounted) return;
@@ -102,8 +220,8 @@ class _RecordPageState extends State<RecordPage> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.8, // 80% of screen width
-        height: MediaQuery.of(context).size.width * 0.8 * (9 / 16), // Maintain 16:9 aspect
+        width: MediaQuery.of(context).size.width * 0.8,
+        height: MediaQuery.of(context).size.width * 0.8 * (9 / 16),
         child: CameraPreview(_cameraController!),
       ),
     );
@@ -126,13 +244,78 @@ class _RecordPageState extends State<RecordPage> {
     );
   }
 
+  Widget _buildControlButtons() {
+    if (_workoutSaved) {
+      return const Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Text(
+          'Workout Saved!',
+          style: TextStyle(
+            fontSize: 20,
+            color: Colors.green,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+    } else if (!_isRecording) {
+      return FloatingActionButton(
+        backgroundColor: Colors.green,
+        onPressed: _startRecording,
+        child: const Icon(Icons.videocam),
+      );
+    } else if (!_isPaused) {
+      return FloatingActionButton(
+        backgroundColor: Colors.orange,
+        onPressed: _pauseRecording,
+        child: const Icon(Icons.pause),
+      );
+    } else {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          FloatingActionButton(
+            backgroundColor: Colors.blue,
+            onPressed: _resumeRecording,
+            child: const Icon(Icons.play_arrow),
+          ),
+          const SizedBox(width: 20),
+          FloatingActionButton(
+            backgroundColor: Colors.red,
+            onPressed: _endWorkout,
+            child: const Icon(Icons.stop),
+          ),
+        ],
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Record Workout')),
+      appBar: AppBar(
+        title: const Text('Record Workout'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  _currentUser?.uid.substring(0, 8) ?? 'No UID',
+                  style: const TextStyle(fontSize: 12),
+                ),
+                Text(
+                  _userEmail,
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
       body: Column(
         children: [
-          // Timer Display
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
@@ -141,7 +324,6 @@ class _RecordPageState extends State<RecordPage> {
             ),
           ),
           
-          // Centered Camera/Video Preview with constrained size
           Expanded(
             child: Center(
               child: _videoController != null && _videoController!.value.isInitialized
@@ -150,14 +332,9 @@ class _RecordPageState extends State<RecordPage> {
             ),
           ),
           
-          // Control Button
           Padding(
             padding: const EdgeInsets.all(24.0),
-            child: FloatingActionButton(
-              backgroundColor: _isRecording ? Colors.red : Colors.green,
-              onPressed: _toggleRecording,
-              child: Icon(_isRecording ? Icons.stop : Icons.videocam),
-            ),
+            child: _buildControlButtons(),
           ),
         ],
       ),
