@@ -36,9 +36,46 @@ class _RecordPageState extends State<RecordPage> {
     super.initState();
     _currentUser = _auth.currentUser;
     _userEmail = _currentUser?.email ?? 'Not logged in';
-    _initializeFirebaseAndCamera();
+    //_initializeFirebaseAndCamera();
+    _initializeFirebaseAndCamera().then((_) {
+      _writeTestData(); // Add this line
+    });
     _resetWorkoutData();
   }
+
+
+  Future<void> _writeTestData() async {
+  try {
+    final user = _auth.currentUser;
+    if (user == null) {
+      debugPrint('No user logged in - skipping test data');
+      return;
+    }
+
+    final now = DateTime.now();
+    final testData = {
+      'date': FieldValue.serverTimestamp(),
+      'duration': 300, // 5 minutes in seconds
+      'startTime': Timestamp.fromDate(now.subtract(Duration(minutes: 5))),
+      'endTime': Timestamp.fromDate(now),
+      'userId': user.uid,
+      'userEmail': user.email ?? 'no-email',
+    };
+
+    await _firestore
+        .collection('userWorkouts')
+        .doc(user.uid)
+        .collection('workouts')
+        .add(testData);
+
+    debugPrint('Successfully wrote test workout data');
+  } catch (e) {
+    debugPrint('Error writing test data: $e');
+  }
+  }
+
+
+
 
   Future<void> _resetWorkoutData() async {
     setState(() {
