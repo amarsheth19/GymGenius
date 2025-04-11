@@ -8,79 +8,83 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    final user = FirebaseAuth.instance.currentUser;
 
-        final user = snapshot.data;
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text("Profile"),
-            actions: [
-              _buildAuthAction(context, user),
-            ],
-          ),
-          body: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (user == null)
-                    const Center(child: Text("Please sign in to view your profile"))
-                  else ...[
-                    _buildProfileInfo(user),
-                    const SizedBox(height: 20),
-                    _buildStreakSection({"Current Streak": 7, "Longest Streak": 14}),
-                    const SizedBox(height: 20),
-                    _buildBadgesSection(),
-                    const SizedBox(height: 20),
-                    _buildProfileStatus(),
-                  ],
-                ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Profile"),
+        actions: [
+          if (user != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Center(
+                child: GestureDetector(
+                  onTap: () async {
+                    await FirebaseAuth.instance.signOut();
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => const MainScreen()),
+                      (route) => false,
+                    );
+                  },
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.logout, color: Colors.black),
+                      SizedBox(width: 4),
+                      Text(
+                        "Log out",
+                        style: TextStyle(color: Colors.black, fontWeight: FontWeight.normal),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Center(
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginPage()),
+                    );
+                  },
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.login, color: Colors.black),
+                      SizedBox(width: 4),
+                      Text(
+                        "Sign in",
+                        style: TextStyle(color: Colors.black, fontWeight: FontWeight.normal),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildAuthAction(BuildContext context, User? user) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Center(
-        child: GestureDetector(
-          onTap: () async {
-            if (user != null) {
-              await FirebaseAuth.instance.signOut();
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const MainScreen()),
-                (route) => false,
-              );
-            } else {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginPage()),
-              );
-            }
-          },
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                user != null ? Icons.logout : Icons.login,
-                color: Colors.black,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                user != null ? "Log out" : "Sign in",
-                style: const TextStyle(color: Colors.black),
-              ),
+              if (user == null)
+                const Center(child: Text("Please sign in to view your profile"))
+              else ...[
+                _buildProfileInfo(user),
+                const SizedBox(height: 20),
+                _buildStreakSection(),
+                const SizedBox(height: 20),
+                _buildBadgesSection(),
+                const SizedBox(height: 20),
+                _buildProfileStatus(),
+              ],
             ],
           ),
         ),
@@ -92,12 +96,6 @@ class ProfilePage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (user.photoURL != null)
-          CircleAvatar(
-            radius: 30,
-            backgroundImage: NetworkImage(user.photoURL!),
-          ),
-        const SizedBox(height: 16),
         Text(
           user.displayName ?? "User",
           style: const TextStyle(
@@ -112,12 +110,13 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildStreakSection(Map<String, int> streaks) {
+  Widget _buildStreakSection() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: streaks.entries
-          .map((e) => _buildStreakInfo(e.key, e.value))
-          .toList(),
+      children: [
+        _buildStreakInfo("Current Streak", 7),
+        _buildStreakInfo("Longest Streak", 14),
+      ],
     );
   }
 
