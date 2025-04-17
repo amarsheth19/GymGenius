@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
+//import 'package:your_app_name/workout_detail_screen.dart';
+import 'workout_detail_screen.dart';
+
 
 class ProgressPage extends StatefulWidget {
   const ProgressPage({super.key});
@@ -11,9 +15,12 @@ class ProgressPage extends StatefulWidget {
 
 class _ProgressPageState extends State<ProgressPage> {
   final user = FirebaseAuth.instance.currentUser;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   late DateTime _focusedDay;
   late DateTime _selectedDay;
   final Set<DateTime> _workoutDays = {};
+  List<Map<String, dynamic>> _workouts = [];
+  bool _isLoading = true;
   
   // Tier progress variables
   final String _currentTier = 'silver'; // Example: current tier
@@ -30,12 +37,54 @@ class _ProgressPageState extends State<ProgressPage> {
     super.initState();
     _focusedDay = DateTime.now();
     _selectedDay = DateTime.now();
-    _workoutDays.addAll([
-      DateTime.now().subtract(const Duration(days: 2)),
-      DateTime.now().subtract(const Duration(days: 4)),
-      DateTime.now().subtract(const Duration(days: 5)),
-      DateTime.now().add(const Duration(days: 1)),
-    ]);
+    if (user != null) {
+      _fetchWorkouts();
+    }
+  }
+
+  Future<void> _fetchWorkouts() async {
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      final workoutsSnapshot = await _firestore
+          .collection('userWorkouts')
+          .doc(user!.uid)
+          .collection('workouts')
+          .orderBy('date', descending: true)
+          .get();
+      
+      final fetchedWorkouts = workoutsSnapshot.docs.map((doc) {
+        final data = doc.data();
+        // Add the document ID to the data
+        return {
+          'id': doc.id,
+          ...data,
+        };
+      }).toList();
+      
+      // Update workout days for calendar
+      final workoutDates = fetchedWorkouts
+          .where((workout) => workout['date'] != null)
+          .map<DateTime>((workout) {
+            final timestamp = workout['date'] as Timestamp;
+            return timestamp.toDate();
+          })
+          .toSet();
+      
+      setState(() {
+        _workouts = fetchedWorkouts;
+        _workoutDays.clear();
+        _workoutDays.addAll(workoutDates);
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching workouts: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
@@ -45,15 +94,54 @@ class _ProgressPageState extends State<ProgressPage> {
     });
   }
 
-  void _toggleWorkoutDay(DateTime day) {
-    setState(() {
-      final normalizedDay = DateTime(day.year, day.month, day.day);
-      if (_workoutDays.contains(normalizedDay)) {
-        _workoutDays.remove(normalizedDay);
-      } else {
-        _workoutDays.add(normalizedDay);
+  void _toggleWorkoutDay(DateTime day) async {
+    final normalizedDay = DateTime(day.year, day.month, day.day);
+    
+    if (_workoutDays.contains(normalizedDay)) {
+      // Find and remove the workout for this day
+      final workoutsOnDay = _workouts.where((workout) {
+        if (workout['date'] == null) return false;
+        final workoutDate = (workout['date'] as Timestamp).toDate();
+        return workoutDate.year == normalizedDay.year && 
+               workoutDate.month == normalizedDay.month && 
+               workoutDate.day == normalizedDay.day;
+      }).toList();
+      
+      // Delete from Firestore if found
+      for (final workout in workoutsOnDay) {
+        try {
+          await _firestore
+              .collection('userWorkouts')
+              .doc(user!.uid)
+              .collection('workouts')
+              .doc(workout['id'])
+              .delete();
+        } catch (e) {
+          print('Error deleting workout: $e');
+        }
       }
-    });
+    } else {
+      // Add a new workout for this day
+      final workoutData = {
+        'date': Timestamp.fromDate(normalizedDay),
+        'title': 'Workout on ${DateFormat('MMM d').format(normalizedDay)}',
+        'exercises': [],
+        'notes': 'Added from progress page',
+      };
+      
+      try {
+        await _firestore
+            .collection('userWorkouts')
+            .doc(user!.uid)
+            .collection('workouts')
+            .add(workoutData);
+      } catch (e) {
+        print('Error adding workout: $e');
+      }
+    }
+    
+    // Refresh workouts
+    _fetchWorkouts();
   }
 
   @override
@@ -189,6 +277,68 @@ class _ProgressPageState extends State<ProgressPage> {
                   Icons.directions_run,
                 ),
                 const SizedBox(height: 25),
+                
+                // Recent Workouts List
+                const Text(
+                  'Recent Workouts',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                _isLoading 
+                    ? const Center(child: CircularProgressIndicator())
+                    : _workouts.isEmpty
+                        ? const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: Text('No workouts found. Start adding your workouts!'),
+                            ),
+                          )
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: _workouts.length > 5 ? 5 : _workouts.length,
+                            itemBuilder: (context, index) {
+                              final workout = _workouts[index];
+                              final workoutDate = workout['date'] != null 
+                                  ? DateFormat('MMM d, yyyy').format((workout['date'] as Timestamp).toDate())
+                                  : 'No date';
+                              
+                              return Card(
+                                margin: const EdgeInsets.symmetric(vertical: 6.0),
+                                child: ListTile(
+                                  leading: const Icon(Icons.fitness_center, color: Colors.blue),
+                                  title: Text(workout['title'] ?? 'Untitled Workout'),
+                                  subtitle: Text(workoutDate),
+                                  trailing: const Icon(Icons.chevron_right),
+                                  onTap: () {
+                                    // Navigate to the workout detail screen
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => WorkoutDetailScreen(
+                                          workout: workout,
+                                          workoutId: workout['id'],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                
+                if (_workouts.length > 5) 
+                  Center(
+                    child: TextButton(
+                      onPressed: () {
+                        // Navigate to full workout history page
+                        // You can implement this based on your app's navigation
+                      },
+                      child: const Text('View All Workouts', style: TextStyle(color: Colors.blue)),
+                    ),
+                  ),
+                
+                const SizedBox(height: 25),
                 const Text(
                   'Workout Calendar',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -235,7 +385,11 @@ class _ProgressPageState extends State<ProgressPage> {
                             day.month,
                             day.day,
                           );
-                          if (_workoutDays.contains(normalizedDay)) {
+                          if (_workoutDays
+                              .any((workoutDay) => 
+                                workoutDay.year == normalizedDay.year && 
+                                workoutDay.month == normalizedDay.month && 
+                                workoutDay.day == normalizedDay.day)) {
                             return Positioned(
                               bottom: 1,
                               child: Container(
@@ -259,18 +413,16 @@ class _ProgressPageState extends State<ProgressPage> {
                   child: ElevatedButton(
                     onPressed: () => _toggleWorkoutDay(_selectedDay),
                     child: Text(
-                      _workoutDays.contains(
-                            DateTime(
-                              _selectedDay.year,
-                              _selectedDay.month,
-                              _selectedDay.day,
-                            ),
-                          )
+                      _workoutDays.any((d) => 
+                        d.year == _selectedDay.year && 
+                        d.month == _selectedDay.month && 
+                        d.day == _selectedDay.day)
                           ? 'Remove Workout for ${DateFormat('MMM d').format(_selectedDay)}'
                           : 'Add Workout for ${DateFormat('MMM d').format(_selectedDay)}',
                     ),
                   ),
                 ),
+                
                 const SizedBox(height: 25),
                 const Text(
                   'Badge Progress',

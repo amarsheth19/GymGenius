@@ -36,9 +36,46 @@ class _RecordPageState extends State<RecordPage> {
     super.initState();
     _currentUser = _auth.currentUser;
     _userEmail = _currentUser?.email ?? 'Not logged in';
-    _initializeFirebaseAndCamera();
+    //_initializeFirebaseAndCamera();
+    _initializeFirebaseAndCamera().then((_) {
+      _writeTestData(); // Add this line
+    });
     _resetWorkoutData();
   }
+
+
+  Future<void> _writeTestData() async {
+  try {
+    final user = _auth.currentUser;
+    if (user == null) {
+      debugPrint('No user logged in - skipping test data');
+      return;
+    }
+
+    final now = DateTime.now();
+    final testData = {
+      'date': FieldValue.serverTimestamp(),
+      'duration': 300, // 5 minutes in seconds
+      'startTime': Timestamp.fromDate(now.subtract(Duration(minutes: 5))),
+      'endTime': Timestamp.fromDate(now),
+      'userId': user.uid,
+      'userEmail': user.email ?? 'no-email',
+    };
+
+    await _firestore
+        .collection('userWorkouts')
+        .doc(user.uid)
+        .collection('workouts')
+        .add(testData);
+
+    debugPrint('Successfully wrote test workout data');
+  } catch (e) {
+    debugPrint('Error writing test data: $e');
+  }
+  }
+
+
+
 
   Future<void> _resetWorkoutData() async {
     setState(() {
@@ -113,20 +150,25 @@ class _RecordPageState extends State<RecordPage> {
   }
 
   Future<void> _endWorkout() async {
-    if (!_isRecording) return;
+  if (!_isRecording) return;
+  
+  try {
+    final file = await _cameraController!.stopVideoRecording();
+    _stopTimer();
+    
+    if (mounted) {
+      _previewVideo(file);
+    }
     
     try {
-      final file = await _cameraController!.stopVideoRecording();
-      _stopTimer();
-      _previewVideo(file);
-      
       await _saveWorkoutData();
-      
-      setState(() {
-        _isRecording = false;
-        _isPaused = false;
-        _workoutSaved = true;
-      });
+      if (mounted) {
+        setState(() {
+          _isRecording = false;
+          _isPaused = false;
+          _workoutSaved = true;
+        });
+      }
       
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
@@ -134,46 +176,67 @@ class _RecordPageState extends State<RecordPage> {
         }
       });
     } catch (e) {
-      debugPrint('Workout save error: $e');
+      debugPrint('Workout data save error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error saving workout: ${e.toString()}'),
+            content: Text('Error saving workout data: $e'),
             duration: const Duration(seconds: 4),
           ),
         );
       }
-      setState(() {
-        _isRecording = false;
-        _isPaused = false;
-      });
     }
+  } catch (e) {
+    debugPrint('Video recording stop error: $e');
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error stopping recording: $e'),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+    setState(() {
+      _isRecording = false;
+      _isPaused = false;
+    });
   }
+}
 
   Future<void> _saveWorkoutData() async {
-    try {
-      if (_currentUser == null) {
-        throw Exception('User not authenticated');
-      }
-
-      await _firestore
-          .collection('userWorkouts')
-          .doc(_currentUser!.uid)
-          .collection('workouts')
-          .add({
-            'duration': _totalWorkoutSeconds,
-            'date': FieldValue.serverTimestamp(),
-            'startTime': Timestamp.fromDate(_workoutStartTime!),
-            'endTime': Timestamp.now(),
-            'userId': _currentUser!.uid,
-            'userEmail': _currentUser!.email,
-          });
-    } catch (e, stackTrace) {
-      debugPrint('Firestore error: $e');
-      debugPrint('Stack trace: $stackTrace');
-      rethrow;
+  try {
+    if (_currentUser == null) {
+      throw Exception('User not authenticated');
     }
+
+    if (_workoutStartTime == null) {
+      throw Exception('Workout start time not set');
+    }
+
+    final workoutData = {
+      'duration': _totalWorkoutSeconds,
+      'date': FieldValue.serverTimestamp(),
+      'startTime': Timestamp.fromDate(_workoutStartTime!),
+      'endTime': Timestamp.now(),
+      'userId': _currentUser!.uid,
+      'userEmail': _currentUser!.email ?? 'no-email',
+    };
+
+    debugPrint('Saving workout data: $workoutData');
+
+    await _firestore
+        .collection('userWorkouts')
+        .doc(_currentUser!.uid)
+        .collection('workouts')
+        .add(workoutData);
+
+    debugPrint('Workout data saved successfully');
+  } catch (e, stackTrace) {
+    debugPrint('Firestore error: $e');
+    debugPrint('Stack trace: $stackTrace');
+    rethrow;
   }
+}
 
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
