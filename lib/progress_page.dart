@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 //import 'package:your_app_name/workout_detail_screen.dart';
 import 'workout_detail_screen.dart';
 
-
 class ProgressPage extends StatefulWidget {
   const ProgressPage({super.key});
   @override
@@ -21,7 +20,7 @@ class _ProgressPageState extends State<ProgressPage> {
   final Set<DateTime> _workoutDays = {};
   List<Map<String, dynamic>> _workouts = [];
   bool _isLoading = true;
-  
+
   // Tier progress variables
   final String _currentTier = 'silver'; // Example: current tier
   final int _currentPoints = 650; // Example: current points
@@ -31,7 +30,7 @@ class _ProgressPageState extends State<ProgressPage> {
     'gold': 1000,
     'champion': 2000,
   };
-  
+
   @override
   void initState() {
     super.initState();
@@ -46,33 +45,33 @@ class _ProgressPageState extends State<ProgressPage> {
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
-      final workoutsSnapshot = await _firestore
-          .collection('userWorkouts')
-          .doc(user!.uid)
-          .collection('workouts')
-          .orderBy('date', descending: true)
-          .get();
-      
-      final fetchedWorkouts = workoutsSnapshot.docs.map((doc) {
-        final data = doc.data();
-        // Add the document ID to the data
-        return {
-          'id': doc.id,
-          ...data,
-        };
-      }).toList();
-      
+      final workoutsSnapshot =
+          await _firestore
+              .collection('userWorkouts')
+              .doc(user!.uid)
+              .collection('workouts')
+              .orderBy('date', descending: true)
+              .get();
+
+      final fetchedWorkouts =
+          workoutsSnapshot.docs.map((doc) {
+            final data = doc.data();
+            // Add the document ID to the data
+            return {'id': doc.id, ...data};
+          }).toList();
+
       // Update workout days for calendar
-      final workoutDates = fetchedWorkouts
-          .where((workout) => workout['date'] != null)
-          .map<DateTime>((workout) {
-            final timestamp = workout['date'] as Timestamp;
-            return timestamp.toDate();
-          })
-          .toSet();
-      
+      final workoutDates =
+          fetchedWorkouts
+              .where((workout) => workout['date'] != null)
+              .map<DateTime>((workout) {
+                final timestamp = workout['date'] as Timestamp;
+                return timestamp.toDate();
+              })
+              .toSet();
+
       setState(() {
         _workouts = fetchedWorkouts;
         _workoutDays.clear();
@@ -96,17 +95,18 @@ class _ProgressPageState extends State<ProgressPage> {
 
   void _toggleWorkoutDay(DateTime day) async {
     final normalizedDay = DateTime(day.year, day.month, day.day);
-    
+
     if (_workoutDays.contains(normalizedDay)) {
       // Find and remove the workout for this day
-      final workoutsOnDay = _workouts.where((workout) {
-        if (workout['date'] == null) return false;
-        final workoutDate = (workout['date'] as Timestamp).toDate();
-        return workoutDate.year == normalizedDay.year && 
-               workoutDate.month == normalizedDay.month && 
-               workoutDate.day == normalizedDay.day;
-      }).toList();
-      
+      final workoutsOnDay =
+          _workouts.where((workout) {
+            if (workout['date'] == null) return false;
+            final workoutDate = (workout['date'] as Timestamp).toDate();
+            return workoutDate.year == normalizedDay.year &&
+                workoutDate.month == normalizedDay.month &&
+                workoutDate.day == normalizedDay.day;
+          }).toList();
+
       // Delete from Firestore if found
       for (final workout in workoutsOnDay) {
         try {
@@ -128,7 +128,7 @@ class _ProgressPageState extends State<ProgressPage> {
         'exercises': [],
         'notes': 'Added from progress page',
       };
-      
+
       try {
         await _firestore
             .collection('userWorkouts')
@@ -139,7 +139,7 @@ class _ProgressPageState extends State<ProgressPage> {
         print('Error adding workout: $e');
       }
     }
-    
+
     // Refresh workouts
     _fetchWorkouts();
   }
@@ -149,13 +149,18 @@ class _ProgressPageState extends State<ProgressPage> {
     // Calculate tier progress
     final tiers = _tierRequirements.keys.toList();
     final currentIndex = tiers.indexOf(_currentTier);
-    final nextTier = currentIndex < tiers.length - 1 ? tiers[currentIndex + 1] : null;
+    final nextTier =
+        currentIndex < tiers.length - 1 ? tiers[currentIndex + 1] : null;
     final currentRequirement = _tierRequirements[_currentTier]!;
-    final nextRequirement = nextTier != null ? _tierRequirements[nextTier]! : _tierRequirements[_currentTier]!;
-    final progress = nextTier != null 
-        ? (_currentPoints - currentRequirement) / (nextRequirement - currentRequirement)
-        : 1.0;
-
+    final nextRequirement =
+        nextTier != null
+            ? _tierRequirements[nextTier]!
+            : _tierRequirements[_currentTier]!;
+    final progress =
+        nextTier != null
+            ? (_currentPoints - currentRequirement) /
+                (nextRequirement - currentRequirement)
+            : 1.0;
     return Scaffold(
       appBar: AppBar(title: const Text('Progress Tracking')),
       body: SingleChildScrollView(
@@ -181,7 +186,7 @@ class _ProgressPageState extends State<ProgressPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                
+
                 // Tier Progress Section
                 Card(
                   elevation: 4,
@@ -204,9 +209,14 @@ class _ProgressPageState extends State<ProgressPage> {
                               width: 50,
                               height: 50,
                               decoration: BoxDecoration(
-                                color: _getTierColor(_currentTier).withOpacity(0.2),
+                                color: _getTierColor(
+                                  _currentTier,
+                                ).withOpacity(0.2),
                                 shape: BoxShape.circle,
-                                border: Border.all(color: _getTierColor(_currentTier), width: 2),
+                                border: Border.all(
+                                  color: _getTierColor(_currentTier),
+                                  width: 2,
+                                ),
                               ),
                               child: Center(
                                 child: Text(
@@ -232,12 +242,18 @@ class _ProgressPageState extends State<ProgressPage> {
                                   if (nextTier != null)
                                     Text(
                                       'Progress to ${nextTier[0].toUpperCase()}${nextTier.substring(1)}: ${(_currentPoints - currentRequirement)}/${nextRequirement - currentRequirement} points',
-                                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey,
+                                      ),
                                     )
                                   else
                                     const Text(
                                       'You\'ve reached the highest tier!',
-                                      style: TextStyle(fontSize: 14, color: Colors.green),
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.green,
+                                      ),
                                     ),
                                   const SizedBox(height: 8),
                                   LinearProgressIndicator(
@@ -258,7 +274,6 @@ class _ProgressPageState extends State<ProgressPage> {
                   ),
                 ),
                 const SizedBox(height: 15),
-
                 _buildProgressCard(
                   'Weekly Workouts',
                   '${_workoutDays.length} days',
@@ -277,67 +292,79 @@ class _ProgressPageState extends State<ProgressPage> {
                   Icons.directions_run,
                 ),
                 const SizedBox(height: 25),
-                
+
                 // Recent Workouts List
                 const Text(
                   'Recent Workouts',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
-                _isLoading 
+                _isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : _workouts.isEmpty
-                        ? const Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: Text('No workouts found. Start adding your workouts!!'),
+                    ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Text(
+                          'No workouts found. Start adding your workouts!',
+                        ),
+                      ),
+                    )
+                    : ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _workouts.length > 5 ? 5 : _workouts.length,
+                      itemBuilder: (context, index) {
+                        final workout = _workouts[index];
+                        final workoutDate =
+                            workout['date'] != null
+                                ? DateFormat('MMM d, yyyy').format(
+                                  (workout['date'] as Timestamp).toDate(),
+                                )
+                                : 'No date';
+
+                        return Card(
+                          margin: const EdgeInsets.symmetric(vertical: 6.0),
+                          child: ListTile(
+                            leading: const Icon(
+                              Icons.fitness_center,
+                              color: Colors.blue,
                             ),
-                          )
-                        : ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: _workouts.length > 5 ? 5 : _workouts.length,
-                            itemBuilder: (context, index) {
-                              final workout = _workouts[index];
-                              final workoutDate = workout['date'] != null 
-                                  ? DateFormat('MMM d, yyyy').format((workout['date'] as Timestamp).toDate())
-                                  : 'No date';
-                              
-                              return Card(
-                                margin: const EdgeInsets.symmetric(vertical: 6.0),
-                                child: ListTile(
-                                  leading: const Icon(Icons.fitness_center, color: Colors.blue),
-                                  title: Text(workout['title'] ?? 'Untitled Workout'),
-                                  subtitle: Text(workoutDate),
-                                  trailing: const Icon(Icons.chevron_right),
-                                  onTap: () {
-                                    // Navigate to the workout detail screen
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => WorkoutDetailScreen(
-                                          workout: workout,
-                                          workoutId: workout['id'],
-                                        ),
+                            title: Text(workout['title'] ?? 'Untitled Workout'),
+                            subtitle: Text(workoutDate),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () {
+                              // Navigate to the workout detail screen
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => WorkoutDetailScreen(
+                                        workout: workout,
+                                        workoutId: workout['id'],
                                       ),
-                                    );
-                                  },
                                 ),
                               );
                             },
                           ),
-                
-                if (_workouts.length > 5) 
+                        );
+                      },
+                    ),
+
+                if (_workouts.length > 5)
                   Center(
                     child: TextButton(
                       onPressed: () {
                         // Navigate to full workout history page
                         // You can implement this based on your app's navigation
                       },
-                      child: const Text('View All Workouts', style: TextStyle(color: Colors.blue)),
+                      child: const Text(
+                        'View All Workouts',
+                        style: TextStyle(color: Colors.blue),
+                      ),
                     ),
                   ),
-                
+
                 const SizedBox(height: 25),
                 const Text(
                   'Workout Calendar',
@@ -385,11 +412,12 @@ class _ProgressPageState extends State<ProgressPage> {
                             day.month,
                             day.day,
                           );
-                          if (_workoutDays
-                              .any((workoutDay) => 
-                                workoutDay.year == normalizedDay.year && 
-                                workoutDay.month == normalizedDay.month && 
-                                workoutDay.day == normalizedDay.day)) {
+                          if (_workoutDays.any(
+                            (workoutDay) =>
+                                workoutDay.year == normalizedDay.year &&
+                                workoutDay.month == normalizedDay.month &&
+                                workoutDay.day == normalizedDay.day,
+                          )) {
                             return Positioned(
                               bottom: 1,
                               child: Container(
@@ -413,16 +441,18 @@ class _ProgressPageState extends State<ProgressPage> {
                   child: ElevatedButton(
                     onPressed: () => _toggleWorkoutDay(_selectedDay),
                     child: Text(
-                      _workoutDays.any((d) => 
-                        d.year == _selectedDay.year && 
-                        d.month == _selectedDay.month && 
-                        d.day == _selectedDay.day)
+                      _workoutDays.any(
+                            (d) =>
+                                d.year == _selectedDay.year &&
+                                d.month == _selectedDay.month &&
+                                d.day == _selectedDay.day,
+                          )
                           ? 'Remove Workout for ${DateFormat('MMM d').format(_selectedDay)}'
                           : 'Add Workout for ${DateFormat('MMM d').format(_selectedDay)}',
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 25),
                 const Text(
                   'Badge Progress',

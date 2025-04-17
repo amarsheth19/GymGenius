@@ -43,39 +43,35 @@ class _RecordPageState extends State<RecordPage> {
     _resetWorkoutData();
   }
 
-
   Future<void> _writeTestData() async {
-  try {
-    final user = _auth.currentUser;
-    if (user == null) {
-      debugPrint('No user logged in - skipping test data');
-      return;
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        debugPrint('No user logged in - skipping test data');
+        return;
+      }
+
+      final now = DateTime.now();
+      final testData = {
+        'date': FieldValue.serverTimestamp(),
+        'duration': 300, // 5 minutes in seconds
+        'startTime': Timestamp.fromDate(now.subtract(Duration(minutes: 5))),
+        'endTime': Timestamp.fromDate(now),
+        'userId': user.uid,
+        'userEmail': user.email ?? 'no-email',
+      };
+
+      await _firestore
+          .collection('userWorkouts')
+          .doc(user.uid)
+          .collection('workouts')
+          .add(testData);
+
+      debugPrint('Successfully wrote test workout data');
+    } catch (e) {
+      debugPrint('Error writing test data: $e');
     }
-
-    final now = DateTime.now();
-    final testData = {
-      'date': FieldValue.serverTimestamp(),
-      'duration': 300, // 5 minutes in seconds
-      'startTime': Timestamp.fromDate(now.subtract(Duration(minutes: 5))),
-      'endTime': Timestamp.fromDate(now),
-      'userId': user.uid,
-      'userEmail': user.email ?? 'no-email',
-    };
-
-    await _firestore
-        .collection('userWorkouts')
-        .doc(user.uid)
-        .collection('workouts')
-        .add(testData);
-
-    debugPrint('Successfully wrote test workout data');
-  } catch (e) {
-    debugPrint('Error writing test data: $e');
   }
-  }
-
-
-
 
   Future<void> _resetWorkoutData() async {
     setState(() {
@@ -92,7 +88,7 @@ class _RecordPageState extends State<RecordPage> {
   Future<void> _initializeFirebaseAndCamera() async {
     try {
       await Firebase.initializeApp();
-      
+
       final cameras = await availableCameras();
       final firstCamera = cameras.firstWhere(
         (camera) => camera.lensDirection == CameraLensDirection.back,
@@ -112,18 +108,18 @@ class _RecordPageState extends State<RecordPage> {
     } catch (e) {
       debugPrint('Initialization error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Initialization failed: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Initialization failed: $e')));
       }
     }
   }
 
   Future<void> _startRecording() async {
     if (!_isCameraReady) return;
-    
+
     await _resetWorkoutData();
-    
+
     _workoutStartTime = DateTime.now();
     await _cameraController!.startVideoRecording();
     _startTimer();
@@ -135,7 +131,7 @@ class _RecordPageState extends State<RecordPage> {
 
   Future<void> _pauseRecording() async {
     if (!_isRecording || _isPaused) return;
-    
+
     await _cameraController!.pauseVideoRecording();
     _stopTimer();
     setState(() => _isPaused = true);
@@ -143,100 +139,100 @@ class _RecordPageState extends State<RecordPage> {
 
   Future<void> _resumeRecording() async {
     if (!_isRecording || !_isPaused) return;
-    
+
     await _cameraController!.resumeVideoRecording();
     _startTimer();
     setState(() => _isPaused = false);
   }
 
   Future<void> _endWorkout() async {
-  if (!_isRecording) return;
-  
-  try {
-    final file = await _cameraController!.stopVideoRecording();
-    _stopTimer();
-    
-    if (mounted) {
-      _previewVideo(file);
-    }
-    
+    if (!_isRecording) return;
+
     try {
-      await _saveWorkoutData();
+      final file = await _cameraController!.stopVideoRecording();
+      _stopTimer();
+
       if (mounted) {
-        setState(() {
-          _isRecording = false;
-          _isPaused = false;
-          _workoutSaved = true;
-        });
+        _previewVideo(file);
       }
-      
-      Future.delayed(const Duration(seconds: 2), () {
+
+      try {
+        await _saveWorkoutData();
         if (mounted) {
-          setState(() => _workoutSaved = false);
+          setState(() {
+            _isRecording = false;
+            _isPaused = false;
+            _workoutSaved = true;
+          });
         }
-      });
+
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            setState(() => _workoutSaved = false);
+          }
+        });
+      } catch (e) {
+        debugPrint('Workout data save error: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error saving workout data: $e'),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      }
     } catch (e) {
-      debugPrint('Workout data save error: $e');
+      debugPrint('Video recording stop error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error saving workout data: $e'),
+            content: Text('Error stopping recording: $e'),
             duration: const Duration(seconds: 4),
           ),
         );
       }
+      setState(() {
+        _isRecording = false;
+        _isPaused = false;
+      });
     }
-  } catch (e) {
-    debugPrint('Video recording stop error: $e');
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error stopping recording: $e'),
-          duration: const Duration(seconds: 4),
-        ),
-      );
-    }
-    setState(() {
-      _isRecording = false;
-      _isPaused = false;
-    });
   }
-}
 
   Future<void> _saveWorkoutData() async {
-  try {
-    if (_currentUser == null) {
-      throw Exception('User not authenticated');
+    try {
+      if (_currentUser == null) {
+        throw Exception('User not authenticated');
+      }
+
+      if (_workoutStartTime == null) {
+        throw Exception('Workout start time not set');
+      }
+
+      final workoutData = {
+        'duration': _totalWorkoutSeconds,
+        'date': FieldValue.serverTimestamp(),
+        'startTime': Timestamp.fromDate(_workoutStartTime!),
+        'endTime': Timestamp.now(),
+        'userId': _currentUser!.uid,
+        'userEmail': _currentUser!.email ?? 'no-email',
+      };
+
+      debugPrint('Saving workout data: $workoutData');
+
+      await _firestore
+          .collection('userWorkouts')
+          .doc(_currentUser!.uid)
+          .collection('workouts')
+          .add(workoutData);
+
+      debugPrint('Workout data saved successfully');
+    } catch (e, stackTrace) {
+      debugPrint('Firestore error: $e');
+      debugPrint('Stack trace: $stackTrace');
+      rethrow;
     }
-
-    if (_workoutStartTime == null) {
-      throw Exception('Workout start time not set');
-    }
-
-    final workoutData = {
-      'duration': _totalWorkoutSeconds,
-      'date': FieldValue.serverTimestamp(),
-      'startTime': Timestamp.fromDate(_workoutStartTime!),
-      'endTime': Timestamp.now(),
-      'userId': _currentUser!.uid,
-      'userEmail': _currentUser!.email ?? 'no-email',
-    };
-
-    debugPrint('Saving workout data: $workoutData');
-
-    await _firestore
-        .collection('userWorkouts')
-        .doc(_currentUser!.uid)
-        .collection('workouts')
-        .add(workoutData);
-
-    debugPrint('Workout data saved successfully');
-  } catch (e, stackTrace) {
-    debugPrint('Firestore error: $e');
-    debugPrint('Stack trace: $stackTrace');
-    rethrow;
   }
-}
 
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -368,10 +364,7 @@ class _RecordPageState extends State<RecordPage> {
                   _currentUser?.uid.substring(0, 8) ?? 'No UID',
                   style: const TextStyle(fontSize: 12),
                 ),
-                Text(
-                  _userEmail,
-                  style: const TextStyle(fontSize: 12),
-                ),
+                Text(_userEmail, style: const TextStyle(fontSize: 12)),
               ],
             ),
           ),
@@ -386,15 +379,17 @@ class _RecordPageState extends State<RecordPage> {
               style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
             ),
           ),
-          
+
           Expanded(
             child: Center(
-              child: _videoController != null && _videoController!.value.isInitialized
-                  ? _videoPreview()
-                  : _cameraPreview(),
+              child:
+                  _videoController != null &&
+                          _videoController!.value.isInitialized
+                      ? _videoPreview()
+                      : _cameraPreview(),
             ),
           ),
-          
+
           Padding(
             padding: const EdgeInsets.all(24.0),
             child: _buildControlButtons(),
