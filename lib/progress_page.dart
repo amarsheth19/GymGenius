@@ -290,7 +290,7 @@ class _ProgressPageState extends State<ProgressPage> {
                         ? const Center(
                             child: Padding(
                               padding: EdgeInsets.all(16.0),
-                              child: Text('No workouts found. Start adding your workouts!'),
+                              child: Text('No workouts found. Start adding your workouts!!'),
                             ),
                           )
                         : ListView.builder(
