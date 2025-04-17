@@ -39,7 +39,7 @@ def process_video():
 
 
 def process_frame(frame):
-    # test to do grayscale
+    # test to do grayscale. Will change for model to mofidy frames
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     return cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
 

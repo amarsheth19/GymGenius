@@ -9,6 +9,7 @@ import 'suggestions_page.dart';
 import 'profile_page.dart';
 import 'progress_page.dart';
 
+// add more themes
 final ThemeData lightTheme = ThemeData(
   brightness: Brightness.light,
   primaryColor: Colors.blue,
