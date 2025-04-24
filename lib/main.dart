@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 import 'dashboard_page.dart';
 import 'record_page.dart';
 import 'suggestions_page.dart';
+
 
 import 'profile_page.dart';
 import 'progress_page.dart';
@@ -60,6 +62,24 @@ final ThemeData darkTheme = ThemeData(
 
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
 
+Future<void> initializeMuscleRanksIfNeeded(String userId) async {
+  final firestore = FirebaseFirestore.instance;
+  final userRanksRef = firestore.collection('userRanks').doc(userId);
+  final muscleGroups = [
+    'Chest', 'Back', 'Abs',
+    'Left Arm', 'Right Arm', 'Left Leg', 'Right Leg',
+  ];
+
+  for (String muscle in muscleGroups) {
+    final docRef = userRanksRef.collection('muscleGroups').doc(muscle);
+    final doc = await docRef.get();
+    if (!doc.exists) {
+      await docRef.set({'rank': 'BRONZE'});
+    }
+  }
+}
+
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -99,7 +119,14 @@ class AuthWrapper extends StatelessWidget {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        return const MainScreen(); // Always show MainScreen now
+
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          // Call once per login session
+          initializeMuscleRanksIfNeeded(user.uid);
+        }
+
+        return const MainScreen(); // Continue to main app
       },
     );
   }
