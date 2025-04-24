@@ -45,9 +45,9 @@ final ThemeData lightTheme = ThemeData(
     ),
   ),
   bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-    backgroundColor: Color.fromARGB(255, 245, 245, 245),
-    selectedItemColor: Colors.blueAccent,
     unselectedItemColor: Colors.grey,
+    selectedItemColor: Colors.blueAccent,
+    backgroundColor: Color.fromARGB(255, 245, 245, 245),
   ),
 );
 
@@ -76,9 +76,9 @@ class MyApp extends StatelessWidget {
       builder: (context, currentTheme, _) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          //theme: lightTheme,
-          //darkTheme: darkTheme,
-          //themeMode: currentTheme,
+          theme: lightTheme,
+          themeMode: currentTheme,
+          darkTheme: darkTheme,
           home: const AuthWrapper(),
         );
       },
