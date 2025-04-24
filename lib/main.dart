@@ -1,18 +1,88 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
-import 'login_page.dart';
 import 'dashboard_page.dart';
+import 'record_page.dart';
 import 'suggestions_page.dart';
+
+
 import 'profile_page.dart';
 import 'progress_page.dart';
 
+// add more themes
+final ThemeData lightTheme = ThemeData(
+  brightness: Brightness.light,
+  primaryColor: Colors.blue,
+  scaffoldBackgroundColor: const Color.fromARGB(255, 245, 245, 245),
+  appBarTheme: const AppBarTheme(
+    backgroundColor: Colors.transparent,
+    elevation: 0,
+    centerTitle: true,
+    titleTextStyle: TextStyle(
+      color: Colors.black,
+      fontWeight: FontWeight.bold,
+      fontSize: 20,
+    ),
+    iconTheme: IconThemeData(color: Colors.black),
+  ),
+  cardColor: Colors.white,
+  cardTheme: CardTheme(
+    color: Colors.white,
+    shadowColor: Colors.grey.withOpacity(0.1),
+    elevation: 4,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+  ),
+  textTheme: const TextTheme(
+    bodyLarge: TextStyle(color: Colors.black),
+    bodyMedium: TextStyle(color: Colors.black87),
+    titleLarge: TextStyle(color: Colors.black),
+  ),
+  elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(
+      elevation: 0,
+      textStyle: const TextStyle(fontWeight: FontWeight.bold),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    ),
+  ),
+  bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+    backgroundColor: Color.fromARGB(255, 245, 245, 245),
+    selectedItemColor: Colors.blueAccent,
+    unselectedItemColor: Colors.grey,
+  ),
+);
+
+final ThemeData darkTheme = ThemeData(
+  brightness: Brightness.dark,
+  primarySwatch: Colors.blue,
+  scaffoldBackgroundColor: Colors.black,
+  appBarTheme: const AppBarTheme(backgroundColor: Colors.black87),
+);
+
+final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
+
+Future<void> initializeMuscleRanksIfNeeded(String userId) async {
+  final firestore = FirebaseFirestore.instance;
+  final userRanksRef = firestore.collection('userRanks').doc(userId);
+  final muscleGroups = [
+    'Chest', 'Back', 'Abs',
+    'Left Arm', 'Right Arm', 'Left Leg', 'Right Leg',
+  ];
+
+  for (String muscle in muscleGroups) {
+    final docRef = userRanksRef.collection('muscleGroups').doc(muscle);
+    final doc = await docRef.get();
+    if (!doc.exists) {
+      await docRef.set({'rank': 'BRONZE'});
+    }
+  }
+}
+
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -21,10 +91,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: const AuthWrapper(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (context, currentTheme, _) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          //theme: lightTheme,
+          //darkTheme: darkTheme,
+          //themeMode: currentTheme,
+          home: const AuthWrapper(),
+        );
+      },
     );
   }
 }
@@ -42,7 +119,14 @@ class AuthWrapper extends StatelessWidget {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        return const MainScreen(); // Always show MainScreen now
+
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          // Call once per login session
+          initializeMuscleRanksIfNeeded(user.uid);
+        }
+
+        return const MainScreen(); // Continue to main app
       },
     );
   }
@@ -61,6 +145,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _pages = [
     const DashboardPage(),
     const SuggestionsPage(),
+    const RecordPage(),
     const ProgressPage(),
     const ProfilePage(),
   ];
@@ -78,8 +163,15 @@ class _MainScreenState extends State<MainScreen> {
         type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Dashboard'),
-          BottomNavigationBarItem(icon: Icon(Icons.lightbulb), label: 'Suggestions'),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Progress'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.lightbulb),
+            label: 'Suggestions',
+          ),
+          BottomNavigationBarItem(icon: Icon(Icons.camera), label: 'Record'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bar_chart),
+            label: 'Progress',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
         currentIndex: _selectedIndex,
