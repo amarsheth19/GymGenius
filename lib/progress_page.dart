@@ -524,7 +524,7 @@ class _ProgressPageState extends State<ProgressPage> {
             minHeight: 10,
           ),
           const SizedBox(height: 4),
-          Text('${percentage}% of goal achieved'),
+          Text('$percentage% of goal achieved'),
         ],
       ),
     );
