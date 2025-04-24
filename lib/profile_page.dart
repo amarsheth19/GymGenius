@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login_page.dart';
-import 'main.dart';
+import 'main.dart'; // for themeNotifier
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -23,7 +23,9 @@ class ProfilePage extends StatelessWidget {
                     await FirebaseAuth.instance.signOut();
                     Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(builder: (context) => const MainScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => const MainScreen(),
+                      ),
                       (route) => false,
                     );
                   },
@@ -34,7 +36,10 @@ class ProfilePage extends StatelessWidget {
                       SizedBox(width: 4),
                       Text(
                         "Log out",
-                        style: TextStyle(color: Colors.black, fontWeight: FontWeight.normal),
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.normal,
+                        ),
                       ),
                     ],
                   ),
@@ -49,7 +54,9 @@ class ProfilePage extends StatelessWidget {
                   onTap: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const LoginPage()),
+                      MaterialPageRoute(
+                        builder: (context) => const LoginPage(),
+                      ),
                     );
                   },
                   child: const Row(
@@ -59,7 +66,10 @@ class ProfilePage extends StatelessWidget {
                       SizedBox(width: 4),
                       Text(
                         "Sign in",
-                        style: TextStyle(color: Colors.black, fontWeight: FontWeight.normal),
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.normal,
+                        ),
                       ),
                     ],
                   ),
@@ -85,6 +95,40 @@ class ProfilePage extends StatelessWidget {
                 const SizedBox(height: 20),
                 _buildProfileStatus(),
               ],
+
+              const SizedBox(height: 30),
+              const Text(
+                "App Theme",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              const SizedBox(height: 10),
+              ValueListenableBuilder<ThemeMode>(
+                valueListenable: themeNotifier,
+                builder: (context, currentMode, _) {
+                  return DropdownButton<ThemeMode>(
+                    value: currentMode,
+                    onChanged: (ThemeMode? newMode) {
+                      if (newMode != null) {
+                        themeNotifier.value = newMode;
+                      }
+                    },
+                    items: const [
+                      DropdownMenuItem(
+                        value: ThemeMode.system,
+                        child: Text("System Default"),
+                      ),
+                      DropdownMenuItem(
+                        value: ThemeMode.light,
+                        child: Text("Light"),
+                      ),
+                      DropdownMenuItem(
+                        value: ThemeMode.dark,
+                        child: Text("Dark"),
+                      ),
+                    ],
+                  );
+                },
+              ),
             ],
           ),
         ),
@@ -174,10 +218,10 @@ class ProfilePage extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         Row(
-          children: [
-            const Icon(Icons.star, color: Colors.grey, size: 24),
-            const SizedBox(width: 8),
-            const Text("Silver Tier", style: TextStyle(fontSize: 16)),
+          children: const [
+            Icon(Icons.star, color: Colors.grey, size: 24),
+            SizedBox(width: 8),
+            Text("Silver Tier", style: TextStyle(fontSize: 16)),
           ],
         ),
       ],
