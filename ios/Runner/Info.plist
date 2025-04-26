@@ -45,5 +45,15 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+
+	<!-- Camera -->
+	<key>NSCameraUsageDescription</key>
+	<string>Gym Genius needs camera access for form tracking.</string>
+
+	<!-- Microphone -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Gym Genius needs microphone access for audio feedback.</string>
+
+
 </dict>
 </plist>
