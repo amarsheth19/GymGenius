@@ -38,7 +38,7 @@ class _RecordPageState extends State<RecordPage> {
     _userEmail = _currentUser?.email ?? 'Not logged in';
     //_initializeFirebaseAndCamera();
     _initializeFirebaseAndCamera().then((_) {
-      _writeTestData(); // Add this line
+      //_writeTestData(); // Add this line
     });
     _resetWorkoutData();
   }
