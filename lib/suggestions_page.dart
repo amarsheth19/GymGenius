@@ -24,7 +24,7 @@ class _SuggestionsPageState extends State<SuggestionsPage> {
     super.initState();
     _model = GenerativeModel(
       model: 'gemini-2.0-flash',
-      apiKey: 'AIzaSyCdPKjteBtxcge-wxHAzCZKIDEzp1Saeac',
+      apiKey: 'API-KEY',
     );
     _loadMuscleRanks();
   }
