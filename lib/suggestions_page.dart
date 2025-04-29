@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';  // Correct Dart import
 
 class SuggestionsPage extends StatefulWidget {
   const SuggestionsPage({super.key});
@@ -10,14 +11,46 @@ class SuggestionsPage extends StatefulWidget {
 class _SuggestionsPageState extends State<SuggestionsPage> {
   final TextEditingController _controller = TextEditingController();
   final List<String> _messages = [];
+  late final GenerativeModel _model;
+  bool _isLoading = false;
 
-  void _sendMessage() {
-    if (_controller.text.isNotEmpty) {
+  @override
+  void initState() {
+    super.initState();
+    // Initialize the Gemini model
+    _model = GenerativeModel(
+      model: 'gemini-2.0-flash',
+      apiKey: 'AIzaSyCdPKjteBtxcge-wxHAzCZKIDEzp1Saeac', // Replace with your actual API key
+    );
+  }
+
+  Future<void> _sendMessage() async {
+    if (_controller.text.isEmpty) return;
+
+    setState(() {
+      _messages.add('You: ${_controller.text}');
+      _isLoading = true;
+    });
+
+    try {
+      final response = await _model.generateContent([
+        Content.text(
+            "As a professional fitness trainer, provide personalized advice about: ${_controller.text}\n"
+            "Include specific exercises, form tips, and safety considerations.")
+      ]);
+
       setState(() {
-        _messages.add('User: ${_controller.text}');
-        _messages.add('AI: Here’s a fitness tip for you!');
+        _messages.add('Trainer: ${response.text ?? "No response"}');
       });
-      _controller.clear();
+    } catch (e) {
+      setState(() {
+        _messages.add('Error: ${e.toString()}');
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+        _controller.clear();
+      });
     }
   }
 
@@ -25,32 +58,31 @@ class _SuggestionsPageState extends State<SuggestionsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Suggestions"),
+        title: const Text("Fitness Coach"),
       ),
       body: Column(
         children: [
           Expanded(
             child: ListView.builder(
-              padding: EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(8.0),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
+                final isUser = _messages[index].startsWith('You');
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4.0),
                   child: Align(
-                    alignment: _messages[index].startsWith('User')
-                        ? Alignment.centerRight
-                        : Alignment.centerLeft,
+                    alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12.0, vertical: 8.0),
                       decoration: BoxDecoration(
-                        color: _messages[index].startsWith('User')
-                            ? Colors.blueAccent
-                            : Colors.grey[300],
+                        color: isUser ? Colors.blue[400] : Colors.grey[300],
                         borderRadius: BorderRadius.circular(12.0),
                       ),
                       child: Text(
                         _messages[index],
-                        style: TextStyle(color: _messages[index].startsWith('User') ? Colors.white : Colors.black),
+                        style: TextStyle(
+                            color: isUser ? Colors.white : Colors.black),
                       ),
                     ),
                   ),
@@ -58,6 +90,11 @@ class _SuggestionsPageState extends State<SuggestionsPage> {
               },
             ),
           ),
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: CircularProgressIndicator(),
+            ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
@@ -66,17 +103,19 @@ class _SuggestionsPageState extends State<SuggestionsPage> {
                   child: TextField(
                     controller: _controller,
                     decoration: InputDecoration(
-                      hintText: 'Type your message...',
+                      hintText: 'Ask for workout advice...',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30.0),
                       ),
-                      contentPadding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                      contentPadding: const EdgeInsets.symmetric(
+                          vertical: 10.0, horizontal: 20.0),
                     ),
+                    onSubmitted: (_) => _sendMessage(),
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.send),
-                  onPressed: _sendMessage,
+                  icon: const Icon(Icons.send),
+                  onPressed: _isLoading ? null : _sendMessage,
                 ),
               ],
             ),
