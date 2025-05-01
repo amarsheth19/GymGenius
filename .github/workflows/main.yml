@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 env:
-  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}  # Load the secret into the workflow environment
+  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}  # This sets it as an environment variable
 
 jobs:
   build:
@@ -21,6 +21,7 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build APK (or iOS) with API key
-        run: flutter build apk --release --dart-define=GEMINI_API_KEY=$GEMINI_API_KEY
-        # For iOS, use: `flutter build ipa --release --dart-define=GEMINI_API_KEY=$GEMINI_API_KEY`
+      - name: Build APK with API key
+        run: flutter build apk --release --dart-define=GEMINI_API_KEY=${{ env.GEMINI_API_KEY }}
+        # For iOS:
+        # run: flutter build ipa --release --dart-define=GEMINI_API_KEY=${{ env.GEMINI_API_KEY }}
