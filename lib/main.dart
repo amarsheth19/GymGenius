@@ -8,7 +8,6 @@ import 'dashboard_page.dart';
 import 'record_page.dart';
 import 'suggestions_page.dart';
 
-
 import 'profile_page.dart';
 import 'progress_page.dart';
 
@@ -54,6 +53,86 @@ final ThemeData lightTheme = ThemeData(
   ),
 );
 
+final ThemeData redEnergyTheme = ThemeData(
+  brightness: Brightness.light,
+  primaryColor: Colors.redAccent,
+  scaffoldBackgroundColor: const Color(0xFFFFF5F5),
+  appBarTheme: const AppBarTheme(
+    backgroundColor: Colors.transparent,
+    elevation: 0,
+    centerTitle: true,
+    titleTextStyle: TextStyle(
+      color: Colors.redAccent,
+      fontWeight: FontWeight.bold,
+      fontSize: 20,
+    ),
+    iconTheme: IconThemeData(color: Colors.redAccent),
+  ),
+  cardColor: Colors.white,
+  cardTheme: CardTheme(
+    color: Colors.white,
+    elevation: 3,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    shadowColor: Colors.redAccent.withOpacity(0.2),
+  ),
+  textTheme: const TextTheme(
+    bodyLarge: TextStyle(color: Colors.black),
+    titleLarge: TextStyle(color: Colors.redAccent),
+  ),
+  elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.redAccent,
+      foregroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    ),
+  ),
+  bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+    selectedItemColor: Colors.redAccent,
+    unselectedItemColor: Colors.grey,
+    backgroundColor: Color(0xFFFFF5F5),
+  ),
+);
+
+final ThemeData freshGreenTheme = ThemeData(
+  brightness: Brightness.light,
+  primaryColor: Colors.green,
+  scaffoldBackgroundColor: const Color(0xFFF0FFF0),
+  appBarTheme: const AppBarTheme(
+    backgroundColor: Colors.transparent,
+    elevation: 0,
+    centerTitle: true,
+    titleTextStyle: TextStyle(
+      color: Colors.green,
+      fontWeight: FontWeight.bold,
+      fontSize: 20,
+    ),
+    iconTheme: IconThemeData(color: Colors.green),
+  ),
+  cardColor: Colors.white,
+  cardTheme: CardTheme(
+    color: Colors.white,
+    shadowColor: Colors.green.withOpacity(0.1),
+    elevation: 4,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+  ),
+  textTheme: const TextTheme(
+    bodyLarge: TextStyle(color: Colors.black),
+    titleLarge: TextStyle(color: Colors.green),
+  ),
+  elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.green,
+      foregroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    ),
+  ),
+  bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+    selectedItemColor: Colors.green,
+    unselectedItemColor: Colors.grey,
+    backgroundColor: Color(0xFFF0FFF0),
+  ),
+);
+
 final ThemeData darkTheme = ThemeData(
   brightness: Brightness.dark,
   primarySwatch: Colors.blue,
@@ -67,8 +146,13 @@ Future<void> initializeMuscleRanksIfNeeded(String userId) async {
   final firestore = FirebaseFirestore.instance;
   final userRanksRef = firestore.collection('userRanks').doc(userId);
   final muscleGroups = [
-    'Chest', 'Back', 'Abs',
-    'Left Arm', 'Right Arm', 'Left Leg', 'Right Leg',
+    'Chest',
+    'Back',
+    'Abs',
+    'Left Arm',
+    'Right Arm',
+    'Left Leg',
+    'Right Leg',
   ];
 
   for (String muscle in muscleGroups) {
@@ -79,6 +163,7 @@ Future<void> initializeMuscleRanksIfNeeded(String userId) async {
     }
   }
 }
+
 
 Future<void> syncBadgesOnStartup(String userId) async {
   final badgeTiers = await fetchBadgeTiers(userId);
@@ -154,7 +239,6 @@ Future<void> syncUserRanksOnStartup(String userId) async {
     }, SetOptions(merge: true));
   }
 }
-
 
 
 void main() async {
