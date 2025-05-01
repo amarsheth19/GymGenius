@@ -34,6 +34,10 @@ def poseCapturing(helper):
                 total_reps.append(current_reps.copy())
                 current_reps.clear()
 
+        cv2.putText(img, f"Frames in current rep: {len(current_reps)}", (10, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+        cv2.putText(img, f"Total reps: {len(total_reps)}", (10, 60),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)
 
         cv2.imshow("Pose", img)
         if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -41,15 +45,21 @@ def poseCapturing(helper):
     return total_reps
 
 
-    
 
 def mlmModel():
     all_reps = []
-    examples = ["good_bench.mp4","good_bench_2.mp4","good_bench_3.mp4","bad_bench_2.mp4","bad_bench.mp4"]
+    examples = ["output.mp4", "good_bench.mp4","good_bench_2.mp4","good_bench_3.mp4","bad_bench_2.mp4","bad_bench.mp4"]
     for example in examples:
         reps = poseCapturing(example)
         all_reps.append(reps)
     return all_reps
+
+def smoothed(points, window_size=3):
+    smoothed = []
+    for i in range(len(points)):
+        window = points[max(0, i - window_size + 1):i+1]
+        smoothed.append(np.mean(window, axis=0))
+    return smoothed
 
 
 
