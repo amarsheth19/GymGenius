@@ -7,6 +7,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: production  # Optional but recommended for secrets
 
     steps:
       - uses: actions/checkout@v4
@@ -18,5 +19,28 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Verify secret is available (debug)
+        run: |
+          if [ -z "${{ secrets.GEMINI_API_KEY }}" ]; then
+            echo "ERROR: GEMINI_API_KEY secret is empty or not set!"
+            exit 1
+          else
+            echo "Secret is available (length: ${#GEMINI_API_KEY})"
+          fi
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
       - name: Build APK with API key
-        run: flutter build apk --release --dart-define=GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+        run: |
+          flutter clean
+          flutter build apk --release \
+            --dart-define=GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}"
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+      # Optional: Upload artifact
+      - uses: actions/upload-artifact@v3
+        if: success()
+        with:
+          name: release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
