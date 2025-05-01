@@ -3,6 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
+import 'badge_service.dart';
+
+
+
 //import 'package:your_app_name/workout_detail_screen.dart';
 import 'workout_detail_screen.dart';
 
@@ -20,6 +24,8 @@ class _ProgressPageState extends State<ProgressPage> {
   final Set<DateTime> _workoutDays = {};
   List<Map<String, dynamic>> _workouts = [];
   bool _isLoading = true;
+  Map<String, String> _badgeTiers = {};
+
 
   // Tier progress variables
   final String _currentTier = 'silver'; // Example: current tier
@@ -37,9 +43,54 @@ class _ProgressPageState extends State<ProgressPage> {
     _focusedDay = DateTime.now();
     _selectedDay = DateTime.now();
     if (user != null) {
-      _fetchWorkouts();
+      _fetchWorkouts(); // already exists
+      _loadBadgeTiers(); // <- NEW method
     }
   }
+
+  Stream<Map<String, String>> _badgeTierStream(String userId) {
+    final badgeRef = FirebaseFirestore.instance
+        .collection('badgeTiers')
+        .doc(userId)
+        .collection('badges');
+
+    return badgeRef.snapshots().map((snapshot) {
+      return {
+        for (final doc in snapshot.docs) doc.id: doc['tier'] ?? 'none',
+      };
+    });
+  }
+
+  Future<void> _loadBadgeTiers() async {
+    await _initializeBadgesIfNeeded(user!.uid);
+    final badgeData = await fetchBadgeTiers(user!.uid);
+    setState(() {
+      _badgeTiers = badgeData;
+    });
+  }
+
+  Future<void> _initializeBadgesIfNeeded(String userId) async {
+    final badgeNames = [
+      'Streak Starter',
+      'Weekly Warrior',
+      'Calendar Collector',
+      'Champion Status',
+      'Leg Day Loyalist',
+    ];
+
+    final badgeRef = FirebaseFirestore.instance
+        .collection('badgeTiers')
+        .doc(userId)
+        .collection('badges');
+
+    for (final badge in badgeNames) {
+      final doc = await badgeRef.doc(badge).get();
+      if (!doc.exists) {
+        await badgeRef.doc(badge).set({'tier': 'bronze'});
+      }
+    }
+  }
+
 
   Future<void> _fetchWorkouts() async {
     setState(() {
@@ -96,32 +147,55 @@ class _ProgressPageState extends State<ProgressPage> {
   void _toggleWorkoutDay(DateTime day) async {
     final normalizedDay = DateTime(day.year, day.month, day.day);
 
-    if (_workoutDays.contains(normalizedDay)) {
-      // Find and remove the workout for this day
-      final workoutsOnDay =
-          _workouts.where((workout) {
-            if (workout['date'] == null) return false;
-            final workoutDate = (workout['date'] as Timestamp).toDate();
-            return workoutDate.year == normalizedDay.year &&
-                workoutDate.month == normalizedDay.month &&
-                workoutDate.day == normalizedDay.day;
-          }).toList();
+    final workoutCollection = _firestore
+        .collection('userWorkouts')
+        .doc(user!.uid)
+        .collection('workouts');
 
-      // Delete from Firestore if found
+    final workoutsOnDay = _workouts.where((workout) {
+      if (workout['date'] == null) return false;
+      final workoutDate = (workout['date'] as Timestamp).toDate();
+      return workoutDate.year == normalizedDay.year &&
+          workoutDate.month == normalizedDay.month &&
+          workoutDate.day == normalizedDay.day;
+    }).toList();
+
+    if (workoutsOnDay.isNotEmpty) {
+      // 🗑 Remove the workout(s)
       for (final workout in workoutsOnDay) {
         try {
+          // Delete from workoutData
           await _firestore
-              .collection('userWorkouts')
+              .collection('workoutData')
               .doc(user!.uid)
               .collection('workouts')
               .doc(workout['id'])
               .delete();
+
+          await _firestore
+            .collection('userWorkouts')
+            .doc(user!.uid)
+            .collection('workouts')
+            .doc(workout['id'])
+            .delete();
+
+          // Delete muscle rank entries from userRanks (if any)
+          final userRanksRef = _firestore
+              .collection('userRanks')
+              .doc(user!.uid)
+              .collection('muscleGroups');
+
+          final rankSnapshot = await userRanksRef.get();
+          for (var doc in rankSnapshot.docs) {
+            await doc.reference.delete();
+          }
         } catch (e) {
-          print('Error deleting workout: $e');
+          print('Error during workout + rank deletion: $e');
         }
       }
+
     } else {
-      // Add a new workout for this day
+      // ➕ Add workout only if one doesn't exist
       final workoutData = {
         'date': Timestamp.fromDate(normalizedDay),
         'title': 'Workout on ${DateFormat('MMM d').format(normalizedDay)}',
@@ -130,19 +204,18 @@ class _ProgressPageState extends State<ProgressPage> {
       };
 
       try {
-        await _firestore
-            .collection('userWorkouts')
-            .doc(user!.uid)
-            .collection('workouts')
-            .add(workoutData);
+        await workoutCollection.add(workoutData);
       } catch (e) {
         print('Error adding workout: $e');
       }
     }
 
-    // Refresh workouts
+    // 🔄 Refresh list
     _fetchWorkouts();
   }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -275,22 +348,22 @@ class _ProgressPageState extends State<ProgressPage> {
                 ),
                 const SizedBox(height: 15),
                 _buildProgressCard(
-                  'Weekly Workouts',
+                  'Total Workouts',
                   '${_workoutDays.length} days',
                   Icons.fitness_center,
                 ),
-                const SizedBox(height: 15),
-                _buildProgressCard(
-                  'Weight Change',
-                  '-2.5 kg',
-                  Icons.monitor_weight,
-                ),
-                const SizedBox(height: 15),
-                _buildProgressCard(
-                  'Running Distance',
-                  '15.3 km',
-                  Icons.directions_run,
-                ),
+                // const SizedBox(height: 15),
+                // _buildProgressCard(
+                //   'Weight Change',
+                //   '-2.5 kg',
+                //   Icons.monitor_weight,
+                // ),
+                // const SizedBox(height: 15),
+                // _buildProgressCard(
+                //   'Running Distance',
+                //   '15.3 km',
+                //   Icons.directions_run,
+                // ),
                 const SizedBox(height: 25),
 
                 // Recent Workouts List
@@ -459,16 +532,25 @@ class _ProgressPageState extends State<ProgressPage> {
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
-                SizedBox(
-                  height: 200, // Fixed height for the trends section
-                  child: ListView(
-                    children: [
-                      _buildTrendItem('Badge 1', 70),
-                      _buildTrendItem('Badge 2', 80),
-                      _buildTrendItem('Badge 3', 90),
-                      _buildTrendItem('Badge 4', 85),
-                    ],
-                  ),
+                StreamBuilder<Map<String, String>>(
+                  stream: _badgeTierStream(user!.uid),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final badgeTiers = snapshot.data!;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildBadgeCard('Streak Starter', badgeTiers['Streak Starter'] ?? 'none'),
+                        _buildBadgeCard('Weekly Warrior', badgeTiers['Weekly Warrior'] ?? 'none'),
+                        _buildBadgeCard('Calendar Collector', badgeTiers['Calendar Collector'] ?? 'none'),
+                        _buildBadgeCard('Champion Status', badgeTiers['Champion Status'] ?? 'none'),
+                        _buildBadgeCard('Leg Day Loyalist', badgeTiers['Leg Day Loyalist'] ?? 'none'),
+                      ],
+                    );
+                  },
                 ),
               ],
             ],
@@ -509,6 +591,49 @@ class _ProgressPageState extends State<ProgressPage> {
     );
   }
 
+  Widget _buildBadgeCard(String badgeName, String tier) {
+    final Color tierColor = _getTierColor(tier);
+
+    return Card(
+      elevation: 4,
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Icon(Icons.verified, size: 40, color: tierColor),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                badgeName,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: tierColor.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: tierColor),
+              ),
+              child: Text(
+                tier.toUpperCase(),
+                style: TextStyle(
+                  color: tierColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+
   Widget _buildTrendItem(String week, int percentage) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -544,4 +669,8 @@ class _ProgressPageState extends State<ProgressPage> {
         return Colors.blue;
     }
   }
+}
+
+extension on Object {
+  delete() {}
 }

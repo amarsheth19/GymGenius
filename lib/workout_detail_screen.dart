@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'badge_service.dart';
+
 
 class WorkoutDetailScreen extends StatefulWidget {
   final Map<String, dynamic> workout;
@@ -44,11 +46,15 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
   @override
   void initState() {
     super.initState();
+
     for (var exercise in keyExercises) {
       weightControllers[exercise] = TextEditingController();
       repControllers[exercise] = TextEditingController();
     }
+
+    _loadExistingLiftData(); // new method
   }
+
 
   @override
   void dispose() {
@@ -57,6 +63,33 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
     }
     super.dispose();
   }
+
+  Future<void> _loadExistingLiftData() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final docRef = FirebaseFirestore.instance
+        .collection('workoutData')
+        .doc(user.uid)
+        .collection('workouts')
+        .doc(widget.workoutId);
+
+    final snapshot = await docRef.get();
+    final data = snapshot.data();
+
+    if (data != null && data.containsKey('liftData')) {
+      final liftData = data['liftData'] as Map<String, dynamic>;
+
+      for (var exercise in keyExercises) {
+        if (liftData.containsKey(exercise)) {
+          final details = liftData[exercise] as Map<String, dynamic>;
+          weightControllers[exercise]?.text = (details['weight'] ?? '').toString();
+          repControllers[exercise]?.text = (details['reps'] ?? '').toString();
+        }
+      }
+    }
+  }
+
 
   Future<void> _saveWorkoutData() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -123,6 +156,8 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
         'date': widget.workout['date'],
       },
     });
+
+    await fetchAndUpdateBadgeTiers(user.uid);
   }
 
   @override
