@@ -11,6 +11,47 @@ import 'profile_page.dart';
 import 'progress_page.dart';
 
 // add more themes
+
+final ThemeData redEnergyTheme = ThemeData(
+  brightness: Brightness.light,
+  primaryColor: Colors.redAccent,
+  scaffoldBackgroundColor: const Color(0xFFFFF5F5),
+  appBarTheme: const AppBarTheme(
+    backgroundColor: Colors.transparent,
+    elevation: 0,
+    centerTitle: true,
+    titleTextStyle: TextStyle(
+      color: Colors.redAccent,
+      fontWeight: FontWeight.bold,
+      fontSize: 20,
+    ),
+    iconTheme: IconThemeData(color: Colors.redAccent),
+  ),
+  cardColor: Colors.white,
+  cardTheme: CardTheme(
+    color: Colors.white,
+    elevation: 3,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    shadowColor: Colors.redAccent.withOpacity(0.2),
+  ),
+  textTheme: const TextTheme(
+    bodyLarge: TextStyle(color: Colors.black),
+    titleLarge: TextStyle(color: Colors.redAccent),
+  ),
+  elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.redAccent,
+      foregroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    ),
+  ),
+  bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+    selectedItemColor: Colors.redAccent,
+    unselectedItemColor: Colors.grey,
+    backgroundColor: Color(0xFFFFF5F5),
+  ),
+);
+
 final ThemeData lightTheme = ThemeData(
   brightness: Brightness.light,
   primaryColor: Colors.blue,
@@ -52,43 +93,45 @@ final ThemeData lightTheme = ThemeData(
   ),
 );
 
-final ThemeData redEnergyTheme = ThemeData(
-  brightness: Brightness.light,
-  primaryColor: Colors.redAccent,
-  scaffoldBackgroundColor: const Color(0xFFFFF5F5),
+final ThemeData premiumSteelGrayTheme = ThemeData(
+  brightness: Brightness.dark,
+  primaryColor: const Color(0xFF1F1F1F),
+  scaffoldBackgroundColor: const Color(0xFF121212),
   appBarTheme: const AppBarTheme(
-    backgroundColor: Colors.transparent,
+    backgroundColor: Color(0xFF1F1F1F),
     elevation: 0,
     centerTitle: true,
     titleTextStyle: TextStyle(
-      color: Colors.redAccent,
+      color: Color(0xFFD4AF37), // Gold Accent
       fontWeight: FontWeight.bold,
-      fontSize: 20,
+      fontSize: 22,
     ),
-    iconTheme: IconThemeData(color: Colors.redAccent),
+    iconTheme: IconThemeData(color: Color(0xFFD4AF37)),
   ),
-  cardColor: Colors.white,
+  cardColor: const Color(0xFF1F1F1F),
   cardTheme: CardTheme(
-    color: Colors.white,
-    elevation: 3,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    shadowColor: Colors.redAccent.withOpacity(0.2),
+    color: const Color(0xFF1F1F1F),
+    elevation: 6,
+    shadowColor: Colors.black.withOpacity(0.4),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
   ),
   textTheme: const TextTheme(
-    bodyLarge: TextStyle(color: Colors.black),
-    titleLarge: TextStyle(color: Colors.redAccent),
+    bodyLarge: TextStyle(color: Colors.white),
+    bodyMedium: TextStyle(color: Colors.white70),
+    titleLarge: TextStyle(color: Color(0xFFD4AF37)), // Gold title
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      backgroundColor: Colors.redAccent,
-      foregroundColor: Colors.white,
+      backgroundColor: Color(0xFFD4AF37),
+      foregroundColor: Colors.black,
+      textStyle: const TextStyle(fontWeight: FontWeight.bold),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     ),
   ),
   bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-    selectedItemColor: Colors.redAccent,
+    selectedItemColor: Color(0xFFD4AF37),
     unselectedItemColor: Colors.grey,
-    backgroundColor: Color(0xFFFFF5F5),
+    backgroundColor: Color(0xFF1F1F1F),
   ),
 );
 
