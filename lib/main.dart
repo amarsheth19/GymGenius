@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:gym_genius/badge_service.dart';
 import 'firebase_options.dart';
 import 'dashboard_page.dart';
 import 'record_page.dart';
@@ -206,6 +207,83 @@ Future<void> initializeMuscleRanksIfNeeded(String userId) async {
   }
 }
 
+
+Future<void> syncBadgesOnStartup(String userId) async {
+  final badgeTiers = await fetchBadgeTiers(userId);
+  await FirebaseFirestore.instance
+      .collection('userBadges')
+      .doc(userId)
+      .set(badgeTiers, SetOptions(merge: true));
+}
+
+Future<void> syncUserRanksOnStartup(String userId) async {
+  final firestore = FirebaseFirestore.instance;
+  final workoutsSnapshot = await firestore
+      .collection('workoutData')
+      .doc(userId)
+      .collection('workouts')
+      .get();
+
+  final Map<String, double> bestScores = {
+    'Left Arm': 0,
+    'Right Arm': 0,
+    'Chest': 0,
+    'Back': 0,
+    'Left Leg': 0,
+    'Right Leg': 0,
+    'Abs': 0,
+  };
+
+  final Map<String, List<String>> exerciseToMuscles = {
+    'Bench Press': ['Left Arm', 'Right Arm', 'Chest', 'Abs'],
+    'Deadlift': ['Back', 'Abs'],
+    'Squat': ['Left Leg', 'Right Leg', 'Abs'],
+  };
+
+  for (var doc in workoutsSnapshot.docs) {
+    final data = doc.data();
+    if (data.containsKey('liftData')) {
+      final liftData = data['liftData'] as Map<String, dynamic>;
+      for (var exercise in liftData.entries) {
+        final name = exercise.key;
+        final info = exercise.value;
+        if (info is Map<String, dynamic>) {
+          final reps = info['reps'] ?? 0;
+          final weight = info['weight'] ?? 0.0;
+          if (reps is int && weight is num) {
+            final score = reps * weight;
+            final muscles = exerciseToMuscles[name] ?? [];
+            for (var muscle in muscles) {
+              final currentBest = bestScores[muscle] ?? 0;
+              if (score > currentBest) {
+                bestScores[muscle] = score.toDouble();
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Assign ranks based on thresholds
+  String getRank(double score) {
+    if (score >= 300) return 'CHAMPION';
+    if (score >= 200) return 'GOLD';
+    if (score >= 100) return 'SILVER';
+    if (score > 0) return 'BRONZE';
+    return 'UNRANKED';
+  }
+
+  final userRanksRef = firestore.collection('userRanks').doc(userId);
+  for (var muscle in bestScores.entries) {
+    await userRanksRef.collection('muscleGroups').doc(muscle.key).set({
+      'rank': getRank(muscle.value),
+      'score': muscle.value,
+    }, SetOptions(merge: true));
+  }
+}
+
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -276,6 +354,19 @@ class _MainScreenState extends State<MainScreen> {
     const ProfilePage(),
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        syncBadgesOnStartup(user.uid);
+        syncUserRanksOnStartup(user.uid); // <-- add this
+      }
+    });
+  }
+
+
   void _onItemTapped(int index) {
     setState(() => _selectedIndex = index);
   }
@@ -283,21 +374,14 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Removed the AppBar completely
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Dashboard'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.lightbulb),
-            label: 'Suggestions',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.lightbulb), label: 'Suggestions'),
           BottomNavigationBarItem(icon: Icon(Icons.camera), label: 'Record'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart),
-            label: 'Progress',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Progress'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
         currentIndex: _selectedIndex,
