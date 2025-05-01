@@ -1,2 +1,26 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ main ]
+
 env:
-  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}  # Load the secret into the workflow environment
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build APK (or iOS) with API key
+        run: flutter build apk --release --dart-define=GEMINI_API_KEY=$GEMINI_API_KEY
+        # For iOS, use: `flutter build ipa --release --dart-define=GEMINI_API_KEY=$GEMINI_API_KEY`
