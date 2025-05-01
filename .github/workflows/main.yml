@@ -4,9 +4,6 @@ on:
   push:
     branches: [ main ]
 
-env:
-  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}  # This sets it as an environment variable
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -23,5 +20,3 @@ jobs:
 
       - name: Build APK with API key
         run: flutter build apk --release --dart-define=GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
-        # For iOS:
-        # run: flutter build ipa --release --dart-define=GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
