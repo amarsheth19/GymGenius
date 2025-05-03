@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:gym_genius/tier_service.dart';
 import 'package:intl/intl.dart';
 
 Future<Map<String, String>> fetchBadgeTiers(String userId) async {
@@ -37,11 +38,9 @@ Future<Map<String, String>> fetchBadgeTiers(String userId) async {
   badgeTiers['Streak Starter'] = getTier(longestStreak, [3, 5, 7]);
 
   // --- Weekly Warrior ---
-  final DateTime now = DateTime.now();
-  final DateTime weekStart = now.subtract(Duration(days: now.weekday % 7));
-  final int weeklyCount =
-      workoutDates.where((d) => d.isAfter(weekStart)).length;
-  badgeTiers['Weekly Warrior'] = getTier(weeklyCount, [4, 5, 7]);
+  final maxWeeklyCount = _calculateWeeklyMax(workoutDates);
+  badgeTiers['Weekly Warrior'] = getTier(maxWeeklyCount, [4, 5, 7]);
+
 
   // --- Calendar Collector ---
   badgeTiers['Calendar Collector'] = getTier(uniqueDays.length, [10, 20, 30]);
@@ -83,6 +82,29 @@ Future<Map<String, String>> fetchBadgeTiers(String userId) async {
 
 
 
+int _calculateWeeklyMax(List<DateTime> workoutDates) {
+  final Set<String> uniqueDateStrings = workoutDates
+      .map((d) => DateFormat('yyyy-MM-dd').format(d))
+      .toSet();
+
+  final List<DateTime> sortedDates = uniqueDateStrings
+      .map((d) => DateFormat('yyyy-MM-dd').parse(d))
+      .toList()
+    ..sort(); // ascending
+
+  int maxCount = 0;
+  int left = 0;
+
+  for (int right = 0; right < sortedDates.length; right++) {
+    while (sortedDates[right].difference(sortedDates[left]).inDays > 6) {
+      left++;
+    }
+    int windowSize = right - left + 1;
+    maxCount = windowSize > maxCount ? windowSize : maxCount;
+  }
+
+  return maxCount;
+}
 
 
 int _calculateLongestStreak(List<DateTime> workoutDates) {
@@ -123,7 +145,11 @@ Future<void> fetchAndUpdateBadgeTiers(String userId) async {
       .doc(userId)
       .collection('badges');
 
+
   for (final entry in badgeTiers.entries) {
     await badgeRef.doc(entry.key).set({'tier': entry.value});
   }
+
+  final points = await calculateUserPoints(userId);
+  await updateUserTier(userId, points);
 }

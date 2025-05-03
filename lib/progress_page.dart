@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'tier_service.dart';
 import 'package:intl/intl.dart';
 import 'badge_service.dart';
 
@@ -28,13 +29,13 @@ class _ProgressPageState extends State<ProgressPage> {
 
 
   // Tier progress variables
-  final String _currentTier = 'silver'; // Example: current tier
-  final int _currentPoints = 650; // Example: current points
+  String _currentTier = 'bronze';
+  int _currentPoints = 0;
   final Map<String, int> _tierRequirements = {
     'bronze': 0,
-    'silver': 500,
-    'gold': 1000,
-    'champion': 2000,
+    'silver': 100,
+    'gold': 200,
+    'champion': 300,
   };
 
   @override
@@ -45,6 +46,7 @@ class _ProgressPageState extends State<ProgressPage> {
     if (user != null) {
       _fetchWorkouts(); // already exists
       _loadBadgeTiers(); // <- NEW method
+      _fetchUserTier();
     }
   }
 
@@ -60,6 +62,18 @@ class _ProgressPageState extends State<ProgressPage> {
       };
     });
   }
+
+  Future<void> _fetchUserTier() async {
+  final doc = await _firestore.collection('userTiers').doc(user!.uid).get();
+  if (doc.exists) {
+    final data = doc.data()!;
+    setState(() {
+      _currentTier = data['tier'] ?? 'bronze';
+      _currentPoints = data['points'] ?? 0;
+    });
+  }
+}
+
 
   Future<void> _loadBadgeTiers() async {
     await _initializeBadgesIfNeeded(user!.uid);
@@ -144,6 +158,9 @@ class _ProgressPageState extends State<ProgressPage> {
     });
   }
 
+
+  //ADDING WORKOUT TO CALENDER
+
   void _toggleWorkoutDay(DateTime day) async {
     final normalizedDay = DateTime(day.year, day.month, day.day);
 
@@ -161,10 +178,10 @@ class _ProgressPageState extends State<ProgressPage> {
     }).toList();
 
     if (workoutsOnDay.isNotEmpty) {
-      // 🗑 Remove the workout(s)
+      // 🗑 REMOVING WORKOUT LOGIC - CHANGES BADGES AND DASHBOARD
       for (final workout in workoutsOnDay) {
         try {
-          // Delete from workoutData
+          // Delete from workoutData and userWorkouts
           await _firestore
               .collection('workoutData')
               .doc(user!.uid)
@@ -172,30 +189,83 @@ class _ProgressPageState extends State<ProgressPage> {
               .doc(workout['id'])
               .delete();
 
-          await _firestore
-            .collection('userWorkouts')
-            .doc(user!.uid)
-            .collection('workouts')
-            .doc(workout['id'])
-            .delete();
+          await workoutCollection.doc(workout['id']).delete();
 
-          // Delete muscle rank entries from userRanks (if any)
-          final userRanksRef = _firestore
+          // 🔁 Recompute max scores
+          final remainingWorkoutsSnapshot = await _firestore
+              .collection('workoutData')
+              .doc(user!.uid)
+              .collection('workouts')
+              .get();
+
+          Map<String, double> maxScores = {
+            'Chest': 0.0,
+            'Back': 0.0,
+            'Abs': 0.0,
+            'Left Arm': 0.0,
+            'Right Arm': 0.0,
+            'Left Leg': 0.0,
+            'Right Leg': 0.0,
+          };
+
+          final Map<String, List<String>> exerciseToMuscles = {
+            'Bench Press': ['Left Arm', 'Right Arm', 'Chest', 'Abs'],
+            'Deadlift': ['Back', 'Abs'],
+            'Squat': ['Left Leg', 'Right Leg', 'Abs'],
+          };
+
+          double calculateScore(int reps, double weight) => reps * weight * 0.1;
+
+          String getTierFromScore(double score) {
+            if (score >= 75) return 'CHAMPION';
+            if (score >= 50) return 'GOLD';
+            if (score >= 25) return 'SILVER';
+            return 'BRONZE';
+          }
+
+          for (final doc in remainingWorkoutsSnapshot.docs) {
+            final liftData = doc.data()['liftData'] as Map<String, dynamic>?;
+
+            if (liftData != null) {
+              for (final entry in liftData.entries) {
+                final exercise = entry.key;
+                final details = entry.value;
+                final reps = (details['reps'] ?? 0) as int;
+                final weight = (details['weight'] ?? 0.0) as double;
+                final score = calculateScore(reps, weight);
+
+                final muscles = exerciseToMuscles[exercise] ?? [];
+                for (final muscle in muscles) {
+                  if (score > maxScores[muscle]!) {
+                    maxScores[muscle] = score;
+                  }
+                }
+              }
+            }
+          }
+
+          final muscleRef = _firestore
               .collection('userRanks')
               .doc(user!.uid)
               .collection('muscleGroups');
 
-          final rankSnapshot = await userRanksRef.get();
-          for (var doc in rankSnapshot.docs) {
-            await doc.reference.delete();
+          for (final entry in maxScores.entries) {
+            final muscle = entry.key;
+            final score = entry.value;
+            final tier = getTierFromScore(score);
+
+            await muscleRef.doc(muscle).set({
+              'rank': tier,
+              'score': score,
+            });
           }
+
         } catch (e) {
           print('Error during workout + rank deletion: $e');
         }
       }
-
     } else {
-      // ➕ Add workout only if one doesn't exist
+      // ➕ Add workout if one doesn't exist
       final workoutData = {
         'date': Timestamp.fromDate(normalizedDay),
         'title': 'Workout on ${DateFormat('MMM d').format(normalizedDay)}',
@@ -210,10 +280,15 @@ class _ProgressPageState extends State<ProgressPage> {
       }
     }
 
-    // 🔄 Refresh list
-    _fetchWorkouts();
-  }
+    // 🔁 Always update points, badge tiers, and refresh state
+    await _fetchWorkouts(); // repopulates _workouts list
+    await fetchAndUpdateBadgeTiers(user!.uid);
+    final points = await calculateUserPoints(user!.uid);
+    await updateUserTier(user!.uid, points);
+    await _fetchUserTier(); // ✅ this makes the progress bar refresh
 
+    setState(() {}); // optional, ensures UI redraws
+  }
 
 
 
@@ -222,18 +297,19 @@ class _ProgressPageState extends State<ProgressPage> {
     // Calculate tier progress
     final tiers = _tierRequirements.keys.toList();
     final currentIndex = tiers.indexOf(_currentTier);
-    final nextTier =
-        currentIndex < tiers.length - 1 ? tiers[currentIndex + 1] : null;
-    final currentRequirement = _tierRequirements[_currentTier]!;
-    final nextRequirement =
-        nextTier != null
-            ? _tierRequirements[nextTier]!
-            : _tierRequirements[_currentTier]!;
-    final progress =
-        nextTier != null
-            ? (_currentPoints - currentRequirement) /
-                (nextRequirement - currentRequirement)
-            : 1.0;
+    final nextTier = currentIndex < tiers.length - 1 ? tiers[currentIndex + 1] : null;
+
+    final currentThreshold = _tierRequirements[_currentTier]!;
+    final nextThreshold = nextTier != null
+        ? _tierRequirements[nextTier]!
+        : currentThreshold;
+
+    final progressPoints = _currentPoints - currentThreshold;
+    final requiredPoints = nextThreshold - currentThreshold;
+    final progressFraction = nextTier != null
+        ? progressPoints / requiredPoints
+        : 1.0;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Progress Tracking')),
       body: SingleChildScrollView(
@@ -314,7 +390,7 @@ class _ProgressPageState extends State<ProgressPage> {
                                   const SizedBox(height: 8),
                                   if (nextTier != null)
                                     Text(
-                                      'Progress to ${nextTier[0].toUpperCase()}${nextTier.substring(1)}: ${(_currentPoints - currentRequirement)}/${nextRequirement - currentRequirement} points',
+                                      'Progress to ${nextTier![0].toUpperCase()}${nextTier.substring(1)}: $progressPoints / $requiredPoints points',
                                       style: const TextStyle(
                                         fontSize: 14,
                                         color: Colors.grey,
@@ -330,7 +406,7 @@ class _ProgressPageState extends State<ProgressPage> {
                                     ),
                                   const SizedBox(height: 8),
                                   LinearProgressIndicator(
-                                    value: progress,
+                                    value: progressFraction.clamp(0.0, 1.0),
                                     backgroundColor: Colors.grey[200],
                                     valueColor: AlwaysStoppedAnimation<Color>(
                                       _getTierColor(_currentTier),
