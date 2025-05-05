@@ -214,7 +214,32 @@ class _ProgressPageState extends State<ProgressPage> {
             'Squat': ['Left Leg', 'Right Leg', 'Abs'],
           };
 
-          double calculateScore(int reps, double weight) => reps * weight * 0.1;
+          double calculateScore(int reps, double weight, String exercise) {
+            final ex = exercise.toLowerCase();
+
+            final Map<String, double> multipliers = {
+              'bench press': 1.0,
+              'squat': 0.75,
+              'deadlift': 0.6,
+            };
+
+            final Map<String, double> reference = {
+              'bench press': 265.0,
+              'squat': 353.0,
+              'deadlift': 441.0,
+            };
+
+            if (!multipliers.containsKey(ex)) {
+              return 0.0;
+            }
+
+            final oneRm = weight * (1.0 + reps / 30.0);
+            final adjustedRm = oneRm * multipliers[ex]!;
+            double score = (adjustedRm / reference[ex]!) * 100.0;
+            score = score.clamp(0.0, 100.0);
+            score = (score * 10).roundToDouble() / 10.0;
+            return score;
+          }
 
           String getTierFromScore(double score) {
             if (score >= 75) return 'CHAMPION';
@@ -232,7 +257,7 @@ class _ProgressPageState extends State<ProgressPage> {
                 final details = entry.value;
                 final reps = (details['reps'] ?? 0) as int;
                 final weight = (details['weight'] ?? 0.0) as double;
-                final score = calculateScore(reps, weight);
+                final score = calculateScore(reps, weight, exercise);
 
                 final muscles = exerciseToMuscles[exercise] ?? [];
                 for (final muscle in muscles) {
@@ -311,325 +336,329 @@ class _ProgressPageState extends State<ProgressPage> {
         : 1.0;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: const Text('Progress Tracking')),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (user == null)
-                const Center(
-                  child: Text(
-                    'Please sign in to view your progress',
-                    style: TextStyle(fontSize: 18),
-                  ),
-                )
-              else ...[
-                const Text(
-                  'Your Fitness Journey',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blueAccent,
-                  ),
-                ),
-                const SizedBox(height: 20),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF181C2F), Color(0xFF2196F3)], // black to blue
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (user == null)
+                  const Center(
+                    child: Text(
+                      'Please sign in to view your progress',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  )
+                else ...[
+                  const SizedBox(height: 20),
 
-                // Tier Progress Section
-                Card(
-                  elevation: 4,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Tier Progress',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                  // Tier Progress Section
+                  Card(
+                    elevation: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Tier Progress',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: _getTierColor(
-                                  _currentTier,
-                                ).withOpacity(0.2),
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: _getTierColor(_currentTier),
-                                  width: 2,
-                                ),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  _currentTier[0].toUpperCase(),
-                                  style: TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: _getTierColor(_currentTier),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Current Tier: ${_currentTier[0].toUpperCase()}${_currentTier.substring(1)}',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  if (nextTier != null)
-                                    Text(
-                                      'Progress to ${nextTier![0].toUpperCase()}${nextTier.substring(1)}: $progressPoints / $requiredPoints points',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey,
-                                      ),
-                                    )
-                                  else
-                                    const Text(
-                                      'You\'ve reached the highest tier!',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.green,
-                                      ),
-                                    ),
-                                  const SizedBox(height: 8),
-                                  LinearProgressIndicator(
-                                    value: progressFraction.clamp(0.0, 1.0),
-                                    backgroundColor: Colors.grey[200],
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      _getTierColor(_currentTier),
-                                    ),
-                                    minHeight: 10,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 15),
-                _buildProgressCard(
-                  'Total Workouts',
-                  '${_workoutDays.length} days',
-                  Icons.fitness_center,
-                ),
-                // const SizedBox(height: 15),
-                // _buildProgressCard(
-                //   'Weight Change',
-                //   '-2.5 kg',
-                //   Icons.monitor_weight,
-                // ),
-                // const SizedBox(height: 15),
-                // _buildProgressCard(
-                //   'Running Distance',
-                //   '15.3 km',
-                //   Icons.directions_run,
-                // ),
-                const SizedBox(height: 25),
-
-                // Recent Workouts List
-                const Text(
-                  'Recent Workouts',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-                _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _workouts.isEmpty
-                    ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Text(
-                          'No workouts found. Start adding your workouts!',
-                        ),
-                      ),
-                    )
-                    : ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _workouts.length > 5 ? 5 : _workouts.length,
-                      itemBuilder: (context, index) {
-                        final workout = _workouts[index];
-                        final workoutDate =
-                            workout['date'] != null
-                                ? DateFormat('MMM d, yyyy').format(
-                                  (workout['date'] as Timestamp).toDate(),
-                                )
-                                : 'No date';
-
-                        return Card(
-                          margin: const EdgeInsets.symmetric(vertical: 6.0),
-                          child: ListTile(
-                            leading: const Icon(
-                              Icons.fitness_center,
-                              color: Colors.blue,
-                            ),
-                            title: Text(workout['title'] ?? 'Untitled Workout'),
-                            subtitle: Text(workoutDate),
-                            trailing: const Icon(Icons.chevron_right),
-                            onTap: () {
-                              // Navigate to the workout detail screen
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (context) => WorkoutDetailScreen(
-                                        workout: workout,
-                                        workoutId: workout['id'],
-                                      ),
-                                ),
-                              );
-                            },
-                          ),
-                        );
-                      },
-                    ),
-
-                if (_workouts.length > 5)
-                  Center(
-                    child: TextButton(
-                      onPressed: () {
-                        // Navigate to full workout history page
-                        // You can implement this based on your app's navigation
-                      },
-                      child: const Text(
-                        'View All Workouts',
-                        style: TextStyle(color: Colors.blue),
-                      ),
-                    ),
-                  ),
-
-                const SizedBox(height: 25),
-                const Text(
-                  'Workout Calendar',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-                Card(
-                  elevation: 4,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: TableCalendar(
-                      firstDay: DateTime.utc(2020, 1, 1),
-                      lastDay: DateTime.utc(2030, 12, 31),
-                      focusedDay: _focusedDay,
-                      selectedDayPredicate:
-                          (day) => isSameDay(_selectedDay, day),
-                      onDaySelected: _onDaySelected,
-                      onPageChanged: (focusedDay) {
-                        _focusedDay = focusedDay;
-                      },
-                      calendarStyle: CalendarStyle(
-                        selectedDecoration: BoxDecoration(
-                          color: Colors.blueAccent,
-                          shape: BoxShape.circle,
-                        ),
-                        todayDecoration: BoxDecoration(
-                          color: Colors.blueAccent.withOpacity(0.3),
-                          shape: BoxShape.circle,
-                        ),
-                        markerDecoration: BoxDecoration(
-                          color: Colors.green,
-                          shape: BoxShape.circle,
-                        ),
-                        markersAlignment: Alignment.bottomCenter,
-                        outsideDaysVisible: false,
-                      ),
-                      headerStyle: HeaderStyle(
-                        formatButtonVisible: false,
-                        titleCentered: true,
-                      ),
-                      calendarBuilders: CalendarBuilders(
-                        markerBuilder: (context, day, events) {
-                          final normalizedDay = DateTime(
-                            day.year,
-                            day.month,
-                            day.day,
-                          );
-                          if (_workoutDays.any(
-                            (workoutDay) =>
-                                workoutDay.year == normalizedDay.year &&
-                                workoutDay.month == normalizedDay.month &&
-                                workoutDay.day == normalizedDay.day,
-                          )) {
-                            return Positioned(
-                              bottom: 1,
-                              child: Container(
-                                width: 8,
-                                height: 8,
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Container(
+                                width: 50,
+                                height: 50,
                                 decoration: BoxDecoration(
-                                  color: Colors.green,
+                                  color: _getTierColor(
+                                    _currentTier,
+                                  ).withOpacity(0.2),
                                   shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: _getTierColor(_currentTier),
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    _currentTier[0].toUpperCase(),
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: _getTierColor(_currentTier),
+                                    ),
+                                  ),
                                 ),
                               ),
-                            );
-                          }
-                          return null;
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Current Tier: ${_currentTier[0].toUpperCase()}${_currentTier.substring(1)}',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    if (nextTier != null)
+                                      Text(
+                                        'Progress to ${nextTier![0].toUpperCase()}${nextTier.substring(1)}: $progressPoints / $requiredPoints points',
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey,
+                                        ),
+                                      )
+                                    else
+                                      const Text(
+                                        'You\'ve reached the highest tier!',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.green,
+                                        ),
+                                      ),
+                                    const SizedBox(height: 8),
+                                    LinearProgressIndicator(
+                                      value: progressFraction.clamp(0.0, 1.0),
+                                      backgroundColor: Colors.grey[200],
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        _getTierColor(_currentTier),
+                                      ),
+                                      minHeight: 10,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  _buildProgressCard(
+                    'Total Workouts',
+                    '${_workoutDays.length} days',
+                    Icons.fitness_center,
+                  ),
+                  // const SizedBox(height: 15),
+                  // _buildProgressCard(
+                  //   'Weight Change',
+                  //   '-2.5 kg',
+                  //   Icons.monitor_weight,
+                  // ),
+                  // const SizedBox(height: 15),
+                  // _buildProgressCard(
+                  //   'Running Distance',
+                  //   '15.3 km',
+                  //   Icons.directions_run,
+                  // ),
+                  const SizedBox(height: 25),
+
+                  // Recent Workouts List
+                  const Text(
+                    'Recent Workouts',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+                  _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _workouts.isEmpty
+                      ? const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Text(
+                            'No workouts found. Start adding your workouts!',
+                          ),
+                        ),
+                      )
+                      : ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _workouts.length > 5 ? 5 : _workouts.length,
+                        itemBuilder: (context, index) {
+                          final workout = _workouts[index];
+                          final workoutDate =
+                              workout['date'] != null
+                                  ? DateFormat('MMM d, yyyy').format(
+                                    (workout['date'] as Timestamp).toDate(),
+                                  )
+                                  : 'No date';
+
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 6.0),
+                            child: ListTile(
+                              leading: const Icon(
+                                Icons.fitness_center,
+                                color: Colors.blue,
+                              ),
+                              title: Text(workout['title'] ?? 'Untitled Workout'),
+                              subtitle: Text(workoutDate),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () {
+                                // Navigate to the workout detail screen
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => WorkoutDetailScreen(
+                                          workout: workout,
+                                          workoutId: workout['id'],
+                                        ),
+                                  ),
+                                );
+                              },
+                            ),
+                          );
                         },
                       ),
+
+                  if (_workouts.length > 5)
+                    Center(
+                      child: TextButton(
+                        onPressed: () {
+                          // Navigate to full workout history page
+                          // You can implement this based on your app's navigation
+                        },
+                        child: const Text(
+                          'View All Workouts',
+                          style: TextStyle(color: Colors.blue),
+                        ),
+                      ),
+                    ),
+
+                  const SizedBox(height: 25),
+                  const Text(
+                    'Workout Calendar',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+                  Card(
+                    elevation: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TableCalendar(
+                        firstDay: DateTime.utc(2020, 1, 1),
+                        lastDay: DateTime.utc(2030, 12, 31),
+                        focusedDay: _focusedDay,
+                        selectedDayPredicate:
+                            (day) => isSameDay(_selectedDay, day),
+                        onDaySelected: _onDaySelected,
+                        onPageChanged: (focusedDay) {
+                          _focusedDay = focusedDay;
+                        },
+                        calendarStyle: CalendarStyle(
+                          selectedDecoration: BoxDecoration(
+                            color: Colors.blueAccent,
+                            shape: BoxShape.circle,
+                          ),
+                          todayDecoration: BoxDecoration(
+                            color: Colors.blueAccent.withOpacity(0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          markerDecoration: BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                          ),
+                          markersAlignment: Alignment.bottomCenter,
+                          outsideDaysVisible: false,
+                        ),
+                        headerStyle: HeaderStyle(
+                          formatButtonVisible: false,
+                          titleCentered: true,
+                        ),
+                        calendarBuilders: CalendarBuilders(
+                          markerBuilder: (context, day, events) {
+                            final normalizedDay = DateTime(
+                              day.year,
+                              day.month,
+                              day.day,
+                            );
+                            if (_workoutDays.any(
+                              (workoutDay) =>
+                                  workoutDay.year == normalizedDay.year &&
+                                  workoutDay.month == normalizedDay.month &&
+                                  workoutDay.day == normalizedDay.day,
+                            )) {
+                              return Positioned(
+                                bottom: 1,
+                                child: Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: Colors.green,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              );
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 15),
-                Center(
-                  child: ElevatedButton(
-                    onPressed: () => _toggleWorkoutDay(_selectedDay),
-                    child: Text(
-                      _workoutDays.any(
-                            (d) =>
-                                d.year == _selectedDay.year &&
-                                d.month == _selectedDay.month &&
-                                d.day == _selectedDay.day,
-                          )
-                          ? 'Remove Workout for ${DateFormat('MMM d').format(_selectedDay)}'
-                          : 'Add Workout for ${DateFormat('MMM d').format(_selectedDay)}',
+                  const SizedBox(height: 15),
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: () => _toggleWorkoutDay(_selectedDay),
+                      child: Text(
+                        _workoutDays.any(
+                              (d) =>
+                                  d.year == _selectedDay.year &&
+                                  d.month == _selectedDay.month &&
+                                  d.day == _selectedDay.day,
+                            )
+                            ? 'Remove Workout for ${DateFormat('MMM d').format(_selectedDay)}'
+                            : 'Add Workout for ${DateFormat('MMM d').format(_selectedDay)}',
+                      ),
                     ),
                   ),
-                ),
 
-                const SizedBox(height: 25),
-                const Text(
-                  'Badge Progress',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-                StreamBuilder<Map<String, String>>(
-                  stream: _badgeTierStream(user!.uid),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
+                  const SizedBox(height: 25),
+                  const Text(
+                    'Badge Progress',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+                  StreamBuilder<Map<String, String>>(
+                    stream: _badgeTierStream(user!.uid),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
 
-                    final badgeTiers = snapshot.data!;
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildBadgeCard('Streak Starter', badgeTiers['Streak Starter'] ?? 'none'),
-                        _buildBadgeCard('Weekly Warrior', badgeTiers['Weekly Warrior'] ?? 'none'),
-                        _buildBadgeCard('Calendar Collector', badgeTiers['Calendar Collector'] ?? 'none'),
-                        _buildBadgeCard('Champion Status', badgeTiers['Champion Status'] ?? 'none'),
-                        _buildBadgeCard('Leg Day Loyalist', badgeTiers['Leg Day Loyalist'] ?? 'none'),
-                      ],
-                    );
-                  },
-                ),
+                      final badgeTiers = snapshot.data!;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildBadgeCard('Streak Starter', badgeTiers['Streak Starter'] ?? 'none'),
+                          _buildBadgeCard('Weekly Warrior', badgeTiers['Weekly Warrior'] ?? 'none'),
+                          _buildBadgeCard('Calendar Collector', badgeTiers['Calendar Collector'] ?? 'none'),
+                          _buildBadgeCard('Champion Status', badgeTiers['Champion Status'] ?? 'none'),
+                          _buildBadgeCard('Leg Day Loyalist', badgeTiers['Leg Day Loyalist'] ?? 'none'),
+                        ],
+                      );
+                    },
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

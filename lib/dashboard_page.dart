@@ -46,49 +46,54 @@ class _DashboardPageState extends State<DashboardPage> {
     return _muscleRanks[muscle] ?? 'Loading...';
   }
 
-  bool _isChecked(String muscle) {
-    return _getRank(muscle).contains('GOLD');
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Muscle Map'),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              _buildHeaderSection(),
-              const SizedBox(height: 24),
-              _buildInteractiveBodyGraph(context),
-              const SizedBox(height: 24),
-              _buildMuscleRankingsSection(),
-            ],
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF181C2F), Color(0xFF2196F3)], // black to blue
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                const SizedBox(height: 24),
+                _buildInteractiveBodyGraph(context),
+                const SizedBox(height: 24),
+                _buildMuscleRankingsSection(context),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-
   // ========== CORE COMPONENTS ========== //
 
- Widget _buildInteractiveBodyGraph(BuildContext context) {
+  Widget _buildInteractiveBodyGraph(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.black.withOpacity(0.07),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -103,25 +108,24 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Stack(
                 children: [
                   Positioned(
-                    top: 5, // Adjust the position to place it above the torso
-                    left: 120, // Center it horizontally
+                    top: 5,
+                    left: 143,
                     child: Container(
-                      width: 40, // Circular head width
-                      height: 40, // Circular head height
-                      decoration: BoxDecoration(
-                        color: Colors.grey, // Head color
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: Colors.grey,
                         shape: BoxShape.circle,
                       ),
                     ),
                   ),
-                  // Chest and Back
-                  _buildMuscleZone(context, 'Back', 120, 25, 80, 55),
-                  _buildMuscleZone(context, 'Chest', 120, 70, 80, 80),
-                  _buildMuscleZone(context, 'Left Arm', 40, 100, 40, 70),
-                  _buildMuscleZone(context, 'Right Arm', 40, 100, 200, 70),
-                  _buildMuscleZone(context, 'Abs', 65, 65, 110, 135),
-                  _buildMuscleZone(context, 'Left Leg', 50, 100, 80, 190),
-                  _buildMuscleZone(context, 'Right Leg', 50, 100, 150, 190),
+                  _buildMuscleZone(context, 'Back', 185, 25, 70, 55),
+                  _buildMuscleZone(context, 'Chest', 105, 70, 110, 80),
+                  _buildMuscleZone(context, 'Left Arm', 40, 90, 70, 80),
+                  _buildMuscleZone(context, 'Right Arm', 40, 90, 215, 80),
+                  _buildMuscleZone(context, 'Abs', 55, 46, 135, 147),
+                  _buildMuscleZone(context, 'Left Leg', 44, 100, 110, 190),
+                  _buildMuscleZone(context, 'Right Leg', 44, 100, 170, 190),
                 ],
               ),
             ),
@@ -133,7 +137,6 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // ========== MUSCLE ZONES ========== //
   Widget _buildMuscleZone(
     BuildContext context,
     String name,
@@ -145,6 +148,34 @@ class _DashboardPageState extends State<DashboardPage> {
     final rank = _muscleRanks[name] ?? '';
     final color = _getColorFromRank(rank);
 
+    if (name == 'Chest') {
+      return Positioned(
+        left: left,
+        top: top,
+        child: GestureDetector(
+          onTap: () => _showMuscleDetails(context, name, color),
+          child: SizedBox(
+            width: width,
+            height: height,
+            child: CustomPaint(
+              painter: TrapezoidPainter(color),
+              child: Center(
+                child: Text(
+                  name.split(' ').first,
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Default rectangular zone for other muscles
     return Positioned(
       left: left,
       top: top,
@@ -173,11 +204,6 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-
-
-
-    // ========== BUTTON ROW ========== //
-
   Widget _buildMuscleButtonsRow(BuildContext context) {
     final muscles = {
       'Chest': 'Chest',
@@ -195,11 +221,9 @@ class _DashboardPageState extends State<DashboardPage> {
           if (entry.value is String) {
             color = _getColorFromRank(_muscleRanks[entry.value] ?? '');
           } else {
-            // Combine ranks if multiple muscles
             final ranks = (entry.value as List<String>)
                 .map((muscle) => _muscleRanks[muscle] ?? '')
                 .toList();
-            // Just average by choosing the most dominant one (e.g., CHAMPION > GOLD > ...)
             color = _getColorFromRank(ranks.firstWhere((r) => r.isNotEmpty, orElse: () => ''));
           }
 
@@ -224,10 +248,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // ========== VISUAL EFFECTS ========== //
-
   void _highlightMuscle(BuildContext context, String muscle) {
-    // Implement muscle highlight logic
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Selected: $muscle'),
@@ -273,83 +294,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // ========== SUPPORTING WIDGETS ========== //
-
-  Widget _buildHeaderSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Instantly Identify\nMuscles To Improve',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            height: 1.2,
-          ),
-        ),
-        const SizedBox(height: 16),
-      ],
-    );
-  }
-
-  Widget _buildRankingItem(String muscle, String rank, bool isChecked) {
-    Color rankColor;
-    switch (rank.split(' ')[0]) {
-      case 'CHAMPION':
-        rankColor = Colors.green;
-        break;
-      case 'GOLD':
-        rankColor = Colors.amber;
-        break;
-      case 'SILVER':
-        rankColor = Colors.grey;
-        break;
-      case 'BRONZE':
-        rankColor = Colors.brown;
-        break;
-      default:
-        rankColor = Colors.blueGrey;
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Checkbox(
-            value: isChecked,
-            onChanged: (value) {},
-            activeColor: Colors.blue,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-          Text(
-            muscle,
-            style: const TextStyle(fontWeight: FontWeight.w500),
-          ),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: rankColor.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: rankColor),
-            ),
-            child: Text(
-              rank,
-              style: TextStyle(
-                color: rankColor,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-  
-
-  Widget _buildMuscleRankingsSection() {
+  Widget _buildMuscleRankingsSection(BuildContext context) {
     final muscleGroups = [
       'Chest',
       'Back',
@@ -363,11 +308,11 @@ class _DashboardPageState extends State<DashboardPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.black.withOpacity(0.07),
             spreadRadius: 2,
             blurRadius: 10,
             offset: const Offset(0, 4),
@@ -391,94 +336,126 @@ class _DashboardPageState extends State<DashboardPage> {
           const SizedBox(height: 16),
           for (final muscle in muscleGroups)
             _buildRankingItem(
+              context,
               muscle,
               _muscleRanks[muscle] ?? 'Loading...',
-              _muscleRanks[muscle]?.toUpperCase().contains('GOLD') ?? false,
             ),
         ],
       ),
     );
   }
 
+  Widget _buildRankingItem(BuildContext context, String muscle, String rank) {
+    Color rankColor;
+    switch (rank.split(' ')[0]) {
+      case 'CHAMPION':
+        rankColor = Colors.green;
+        break;
+      case 'GOLD':
+        rankColor = Colors.amber;
+        break;
+      case 'SILVER':
+        rankColor = Colors.grey;
+        break;
+      case 'BRONZE':
+        rankColor = Colors.brown;
+        break;
+      default:
+        rankColor = Colors.blueGrey;
+    }
 
-  String _getRankFromColor(Color color) {
-    if (color == Colors.amber) return 'Gold';
-    if (color == Colors.grey) return 'Silver';
-    if (color == Colors.green) return 'Champion';
-    if (color == Colors.brown) return 'Bronze';
-    return 'Bronze';
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Text(
+            muscle,
+            style: TextStyle(
+              fontWeight: FontWeight.w500,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
+            ),
+          ),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: rankColor.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: rankColor),
+            ),
+            child: Text(
+              rank,
+              style: TextStyle(
+                color: rankColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Color _getColorFromRank(String rank) {
-    final upper = rank.toUpperCase();
-    if (upper.contains('CHAMPION')) return Colors.green;
-    if (upper.contains('GOLD')) return Colors.amber;
-    if (upper.contains('SILVER')) return Colors.grey;
-    if (upper.contains('BRONZE')) return Colors.brown;
-    return Colors.blue;
+    switch (rank.toUpperCase()) {
+      case 'CHAMPION':
+        return Colors.green;
+      case 'GOLD':
+        return Colors.amber;
+      case 'SILVER':
+        return Colors.grey;
+      case 'BRONZE':
+        return Colors.brown;
+      default:
+        return Colors.blueGrey;
+    }
+  }
+
+  String _getRankFromColor(Color color) {
+    if (color == Colors.green) return 'CHAMPION';
+    if (color == Colors.amber) return 'GOLD';
+    if (color == Colors.grey) return 'SILVER';
+    if (color == Colors.brown) return 'BRONZE';
+    return 'Unknown';
   }
 }
 
-// ========== BODY PAINTER ========== //
-
+// Dummy painter for the body outline
 class _BodyPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
+    // You can add a custom body outline here if you want
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class TrapezoidPainter extends CustomPainter {
+  final Color color;
+  TrapezoidPainter(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white
+      ..color = color.withOpacity(0.3)
       ..style = PaintingStyle.fill;
 
-    // Draw torso
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: Offset(size.width / 2, size.height / 2 - 20),
-          width: 120,
-          height: 180,
-        ),
-        const Radius.circular(20),
-      ),
-      paint,
-    );
+    final borderPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
 
-    // Draw head
-    canvas.drawCircle(
-      Offset(size.width / 2, 40),
-      20,
-      paint,
-    );
+    // Top is long, bottom is short
+    final path = Path()
+      ..moveTo(0, 0) // top left (wide)
+      ..lineTo(size.width, 0) // top right (wide)
+      ..lineTo(size.width * 0.75, size.height) // bottom right (narrow)
+      ..lineTo(size.width * 0.25, size.height) // bottom left (narrow)
+      ..close();
 
-    // Draw arms
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(30, 100, 40, 120),
-        const Radius.circular(20),
-      ),
-      paint,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(size.width - 70, 100, 40, 120),
-        const Radius.circular(20),
-      ),
-      paint,
-    );
-
-    // Draw legs
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(60, 200, 50, 140),
-        const Radius.circular(20),
-      ),
-      paint,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(size.width - 110, 200, 50, 140),
-        const Radius.circular(20),
-      ),
-      paint,
-    );
+    canvas.drawPath(path, paint);
+    canvas.drawPath(path, borderPaint);
   }
 
   @override

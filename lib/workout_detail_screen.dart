@@ -36,8 +36,31 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
     'Squat': ['Left Leg', 'Right Leg', 'Abs'],
   };
 
-  double calculateScore(int reps, double weight) {
-    return reps * weight * 0.1;
+  double calculateScore(int reps, double weight, String exercise) {
+    final ex = exercise.toLowerCase();
+
+    final Map<String, double> multipliers = {
+      'bench press': 1.0,
+      'squat': 0.75,
+      'deadlift': 0.6,
+    };
+
+    final Map<String, double> reference = {
+      'bench press': 265.0,
+      'squat': 353.0,
+      'deadlift': 441.0,
+    };
+
+    if (!multipliers.containsKey(ex)) {
+      return 0.0;
+    }
+
+    final oneRm = weight * (1.0 + reps / 30.0);
+    final adjustedRm = oneRm * multipliers[ex]!;
+    double score = (adjustedRm / reference[ex]!) * 100.0;
+    score = score.clamp(0.0, 100.0);
+    score = (score * 10).roundToDouble() / 10.0;
+    return score;
   }
 
   String getTierFromScore(double score) {
@@ -121,7 +144,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
             'reps': r,
           };
 
-          final score = calculateScore(r, w);
+          final score = calculateScore(r, w, exercise);
           final newTier = getTierFromScore(score);
 
           final affectedMuscles = exerciseToMuscles[exercise];
