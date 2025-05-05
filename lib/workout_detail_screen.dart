@@ -38,29 +38,26 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
 
   double calculateScore(int reps, double weight, String exercise) {
     final ex = exercise.toLowerCase();
-
+    
     final Map<String, double> multipliers = {
-      'bench press': 1.0,
+      'bench press': .78,  // Hardest exercise
       'squat': 0.75,
-      'deadlift': 0.6,
+      'deadlift': 0.72,
     };
 
     final Map<String, double> reference = {
-      'bench press': 265.0,
-      'squat': 353.0,
-      'deadlift': 441.0,
+      'bench press': 375.0,  // Elite standard (adjusted up 19%)
+      'squat': 470.0,        // Elite standard (adjusted up 32%)
+      'deadlift': 550.0      // Elite standard (adjusted up 28%)
     };
 
-    if (!multipliers.containsKey(ex)) {
-      return 0.0;
-    }
+    if (!multipliers.containsKey(ex)) return 0.0;
 
     final oneRm = weight * (1.0 + reps / 30.0);
     final adjustedRm = oneRm * multipliers[ex]!;
     double score = (adjustedRm / reference[ex]!) * 100.0;
     score = score.clamp(0.0, 100.0);
-    score = (score * 10).roundToDouble() / 10.0;
-    return score;
+    return (score * 10).roundToDouble() / 10.0;
   }
 
   String getTierFromScore(double score) {
