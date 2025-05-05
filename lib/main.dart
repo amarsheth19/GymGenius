@@ -210,76 +210,41 @@ Future<void> initializeMuscleRanksIfNeeded(String userId) async {
 
 Future<void> syncBadgesOnStartup(String userId) async {
   final badgeTiers = await fetchBadgeTiers(userId);
-  await FirebaseFirestore.instance
-      .collection('userBadges')
+  final firestore = FirebaseFirestore.instance;
+
+  for (final entry in badgeTiers.entries) {
+    final badgeName = entry.key;
+    final tier = entry.value;
+
+    await firestore
+        .collection('badgeTiers')
+        .doc(userId)
+        .collection('badges')
+        .doc(badgeName)
+        .set({'tier': tier}, SetOptions(merge: true));
+  }
+}
+
+Future<Map<String, Map<String, dynamic>>> fetchUserRanks(String userId) async {
+  final ranksSnapshot = await FirebaseFirestore.instance
+      .collection('userRanks')
       .doc(userId)
-      .set(badgeTiers, SetOptions(merge: true));
+      .collection('muscleGroups')
+      .get();
+
+  return {
+    for (var doc in ranksSnapshot.docs)
+      doc.id: {
+        'rank': doc['rank'],
+        'score': doc['score'],
+      }
+  };
 }
 
 Future<void> syncUserRanksOnStartup(String userId) async {
-  final firestore = FirebaseFirestore.instance;
-  final workoutsSnapshot = await firestore
-      .collection('workoutData')
-      .doc(userId)
-      .collection('workouts')
-      .get();
-
-  final Map<String, double> bestScores = {
-    'Left Arm': 0,
-    'Right Arm': 0,
-    'Chest': 0,
-    'Back': 0,
-    'Left Leg': 0,
-    'Right Leg': 0,
-    'Abs': 0,
-  };
-
-  final Map<String, List<String>> exerciseToMuscles = {
-    'Bench Press': ['Left Arm', 'Right Arm', 'Chest', 'Abs'],
-    'Deadlift': ['Back', 'Abs'],
-    'Squat': ['Left Leg', 'Right Leg', 'Abs'],
-  };
-
-  for (var doc in workoutsSnapshot.docs) {
-    final data = doc.data();
-    if (data.containsKey('liftData')) {
-      final liftData = data['liftData'] as Map<String, dynamic>;
-      for (var exercise in liftData.entries) {
-        final name = exercise.key;
-        final info = exercise.value;
-        if (info is Map<String, dynamic>) {
-          final reps = info['reps'] ?? 0;
-          final weight = info['weight'] ?? 0.0;
-          if (reps is int && weight is num) {
-            final score = reps * weight;
-            final muscles = exerciseToMuscles[name] ?? [];
-            for (var muscle in muscles) {
-              final currentBest = bestScores[muscle] ?? 0;
-              if (score > currentBest) {
-                bestScores[muscle] = score.toDouble();
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // Assign ranks based on thresholds
-  String getRank(double score) {
-    if (score >= 300) return 'CHAMPION';
-    if (score >= 200) return 'GOLD';
-    if (score >= 100) return 'SILVER';
-    if (score > 0) return 'BRONZE';
-    return 'UNRANKED';
-  }
-
-  final userRanksRef = firestore.collection('userRanks').doc(userId);
-  for (var muscle in bestScores.entries) {
-    await userRanksRef.collection('muscleGroups').doc(muscle.key).set({
-      'rank': getRank(muscle.value),
-      'score': muscle.value,
-    }, SetOptions(merge: true));
+  final user = FirebaseAuth.instance.currentUser;
+  if (user != null) {
+    final muscleRanks = await fetchUserRanks(user.uid);
   }
 }
 

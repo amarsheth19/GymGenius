@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'progress_page.dart';
 import 'package:intl/intl.dart';
 import 'badge_service.dart';
+import 'tier_service.dart';
 
 
 class WorkoutDetailScreen extends StatefulWidget {
@@ -21,6 +23,8 @@ class WorkoutDetailScreen extends StatefulWidget {
 
 class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
   bool _isLoading = false;
+  String _currentTier = 'bronze';
+  int _currentPoints = 0;
 
   final List<String> keyExercises = ['Squat', 'Deadlift', 'Bench Press'];
   final Map<String, TextEditingController> weightControllers = {};
@@ -130,14 +134,19 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                   .doc(muscle);
 
               final muscleDoc = await muscleRef.get();
-              final currentScore = muscleDoc.exists ? (muscleDoc.data()!['score'] ?? 0.0) : 0.0;
+              final currentScore = muscleDoc.exists ? (muscleDoc.data()?['score'] ?? 0.0) : 0.0;
 
-              if (score > currentScore) {
+              if (score > (currentScore is num ? currentScore : 0.0)) {
+                final newTier = getTierFromScore(score);
                 await muscleRef.set({
                   'rank': newTier,
                   'score': score,
                 });
+                //debugPrint('Updated $muscle with score $score and rank $newTier');
+              } else {
+                //debugPrint('Skipped $muscle — score $score did not exceed current score $currentScore');
               }
+
             }
           }
         }
@@ -230,6 +239,13 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
           setState(() => _isLoading = true);
           try {
             await _saveWorkoutData();
+            final userId = FirebaseAuth.instance.currentUser?.uid;
+            if (userId != null) {
+              await fetchAndUpdateBadgeTiers(userId);
+              final points = await calculateUserPoints(userId);
+              await updateUserTier(userId, points);
+            }
+
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Workout data and ranks updated!')),
@@ -283,7 +299,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
               controller: weightControllers[exercise],
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
-                labelText: 'Weight (kg)',
+                labelText: 'Weight (lb)',
                 border: OutlineInputBorder(),
               ),
             ),
