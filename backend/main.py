@@ -4,11 +4,6 @@ import shutil
 #from fastapi import FastAPI
 
 
-<<<<<<< Updated upstream
-=======
-app = FastAPI()
-
->>>>>>> Stashed changes
 @app.post("/record")
 def recording():
     camera = cv2.VideoCapture(0) #Sets up the camera
