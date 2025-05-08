@@ -31,7 +31,12 @@ def normalize(points, indices = (11,12)):
     scaling_factor = np.linalg.norm(shoulderR - shoulderL)
     return ((points - center)/(scaling_factor + 1e-6)).flatten()
 
-
+def smoothed(points, window_size=3):
+    smoothed = []
+    for i in range(len(points)):
+        window = points[max(0, i - window_size + 1):i+1]
+        smoothed.append(np.mean(window, axis=0))
+    return smoothed
 
 def poseCapturing(helper):
     cap = cv2.VideoCapture(helper)
@@ -63,6 +68,11 @@ def poseCapturing(helper):
                 total_reps.append(current_reps.copy())
                 current_reps.clear()
 
+        cv2.putText(img, f"Total reps: {len(total_reps)}", (10, 60),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 255), 2)
+        cv2.putText(img, f"Frames in current rep: {len(current_reps)}", (10, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+        
 
         cv2.imshow("Pose", img)
         if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -70,19 +80,20 @@ def poseCapturing(helper):
     return total_reps
 
 
-    
 
 def mlmModel(video):
     all_reps = []
+
     examples = ["good_bench.mp4","good_bench_2.mp4","good_bench_3.mp4","bad_bench_2.mp4","bad_bench.mp4", video]
+
     for example in examples:
         reps = poseCapturing(example)
         all_reps.append(reps)
     return all_reps
 
 
-
 helper = mlmModel("output.mp4")
+
 print(helper)
 
 
