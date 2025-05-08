@@ -4,7 +4,7 @@ import shutil
 #from fastapi import FastAPI
 
 
-#@app.post("/record")
+
 def recording():
     camera = cv2.VideoCapture(0) #Sets up the camera
     camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1920) # Makes camera makes resolution
