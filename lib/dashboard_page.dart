@@ -1,29 +1,84 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
+
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  final _auth = FirebaseAuth.instance;
+  final _firestore = FirebaseFirestore.instance;
+  Map<String, String> _muscleRanks = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchMuscleRanks();
+  }
+
+  Future<void> _fetchMuscleRanks() async {
+    if (!mounted) return;
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    final snapshot = await _firestore
+        .collection('userRanks')
+        .doc(user.uid)
+        .collection('muscleGroups')
+        .get();
+
+    final expectedMuscles = [
+      'Chest', 'Back', 'Abs', 'Left Arm', 'Right Arm', 'Left Leg', 'Right Leg'
+    ];
+
+    final data = {
+      for (var doc in snapshot.docs)
+        if (expectedMuscles.contains(doc.id)) doc.id: doc['rank'] as String,
+    };
+
+    if (!mounted) return;
+    setState(() => _muscleRanks = data);
+  }
+
+  String _getRank(String muscle) {
+    return _muscleRanks[muscle] ?? 'Loading...';
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 245, 245, 245),
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Muscle Map'),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              // _buildHeaderSection(), // Uncomment if you want to use this section.
-              const SizedBox(height: 24),
-              _buildInteractiveBodyGraph(context),
-              const SizedBox(height: 24),
-              _buildMuscleRankingsSection(),
-            ],
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF181C2F), Color(0xFF2196F3)], // black to blue
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                const SizedBox(height: 24),
+                _buildInteractiveBodyGraph(context),
+                const SizedBox(height: 24),
+                _buildMuscleRankingsSection(context),
+              ],
+            ),
           ),
         ),
       ),
@@ -36,11 +91,11 @@ class DashboardPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.black.withOpacity(0.07),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -54,111 +109,25 @@ class DashboardPage extends StatelessWidget {
               painter: _BodyPainter(),
               child: Stack(
                 children: [
-                  // Chest and Back
-                  _buildMuscleZone(
-                    context,
-                    'Back',
-                    Colors.brown,
-                    100,
-                    100,
-                    640,
-                    70,
+                  Positioned(
+                    top: 5,
+                    left: 143,
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: Colors.grey,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                   ),
-                  _buildMuscleZone(
-                    context,
-                    'Chest',
-                    Colors.amber,
-                    100,
-                    60,
-                    640,
-                    60,
-                  ),
-                  // Arms
-                  _buildMuscleZone(
-                    context,
-                    'Left Arm',
-                    Colors.blue,
-                    40,
-                    70,
-                    600,
-                    60,
-                  ),
-                  _buildMuscleZone(
-                    context,
-                    'Right Arm',
-                    Colors.blue,
-                    40,
-                    70,
-                    740,
-                    60,
-                  ),
-                  // Forearms
-                  _buildMuscleZone(
-                    context,
-                    'Left Forearm',
-                    Colors.red,
-                    35,
-                    50,
-                    602,
-                    135,
-                  ),
-                  _buildMuscleZone(
-                    context,
-                    'Right Forearm',
-                    Colors.red,
-                    35,
-                    50,
-                    742,
-                    135,
-                  ),
-                  // Core
-                  _buildMuscleZone(
-                    context,
-                    'Abs',
-                    Colors.green,
-                    100,
-                    60,
-                    640,
-                    140,
-                  ),
-                  // Legs
-                  _buildMuscleZone(
-                    context,
-                    'Left Upper Leg',
-                    Colors.purple,
-                    40,
-                    60,
-                    640,
-                    200,
-                  ),
-                  _buildMuscleZone(
-                    context,
-                    'Right Upper Leg',
-                    Colors.purple,
-                    40,
-                    60,
-                    700,
-                    200,
-                  ),
-                  // Lower Legs
-                  _buildMuscleZone(
-                    context,
-                    'Left Calf',
-                    Colors.orange,
-                    40,
-                    60,
-                    640,
-                    260,
-                  ),
-                  _buildMuscleZone(
-                    context,
-                    'Right Calf',
-                    Colors.orange,
-                    40,
-                    60,
-                    700,
-                    260,
-                  ),
+                  _buildMuscleZone(context, 'Back', 180, 25, 73, 55),
+                  _buildMuscleZone(context, 'Chest', 111, 70, 107, 80),
+                  _buildMuscleZone(context, 'Left Arm', 33, 85, 73, 80),
+                  _buildMuscleZone(context, 'Right Arm', 33, 85, 218, 80),
+                  _buildMuscleZone(context, 'Abs', 55, 46, 135, 147),
+                  _buildMuscleZone(context, 'Left Leg', 41, 100, 113, 190),
+                  _buildMuscleZone(context, 'Right Leg', 41, 100, 170, 190),
                 ],
               ),
             ),
@@ -170,18 +139,45 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  // ========== MUSCLE ZONES ========== //
-
   Widget _buildMuscleZone(
     BuildContext context,
     String name,
-    Color color,
     double width,
     double height,
     double left,
-    double top, {
-    bool visible = true,
-  }) {
+    double top,
+  ) {
+    final rank = _muscleRanks[name] ?? '';
+    final color = _getColorFromRank(rank);
+
+    if (name == 'Chest') {
+      return Positioned(
+        left: left,
+        top: top,
+        child: GestureDetector(
+          onTap: () => _showMuscleDetails(context, name, color),
+          child: SizedBox(
+            width: width,
+            height: height,
+            child: CustomPaint(
+              painter: TrapezoidPainter(color),
+              child: Center(
+                child: Text(
+                  name.split(' ').last,
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Default rectangular zone for other muscles
     return Positioned(
       left: left,
       top: top,
@@ -191,75 +187,70 @@ class DashboardPage extends StatelessWidget {
           width: width,
           height: height,
           decoration: BoxDecoration(
-            color: visible ? color.withOpacity(0.3) : Colors.transparent,
-            border: visible ? Border.all(color: color, width: 2) : null,
+            color: color.withOpacity(0.3),
+            border: Border.all(color: color, width: 2),
             borderRadius: BorderRadius.circular(8),
           ),
-          child:
-              visible
-                  ? Center(
-                    child: Text(
-                      name.split(' ').first,
-                      style: TextStyle(
-                        color: color,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  )
-                  : null,
+          child: Center(
+            child: Text(
+              name.split(' ').last,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 
-  // ========== BUTTON ROW ========== //
-
   Widget _buildMuscleButtonsRow(BuildContext context) {
     final muscles = {
-      'Chest': Colors.amber,
-      'Upper Arms': Colors.blue,
-      'Lower Arms': Colors.red,
-      'Core': Colors.green,
-      'Upper Legs': Colors.purple,
-      'Lower Legs': Colors.orange,
-      'Back': Colors.brown,
+      'Chest': 'Chest',
+      'Arms': ['Left Arm', 'Right Arm'],
+      'Core': 'Abs',
+      'Legs': ['Left Leg', 'Right Leg'],
+      'Back': 'Back',
     };
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children:
-            muscles.entries.map((entry) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: entry.value.withOpacity(0.1),
-                    foregroundColor: entry.value,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      side: BorderSide(color: entry.value),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                  ),
-                  onPressed: () => _highlightMuscle(context, entry.key),
-                  child: Text(entry.key),
+        children: muscles.entries.map((entry) {
+          Color color;
+          if (entry.value is String) {
+            color = _getColorFromRank(_muscleRanks[entry.value] ?? '');
+          } else {
+            final ranks = (entry.value as List<String>)
+                .map((muscle) => _muscleRanks[muscle] ?? '')
+                .toList();
+            color = _getColorFromRank(ranks.firstWhere((r) => r.isNotEmpty, orElse: () => ''));
+          }
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: color.withOpacity(0.2),
+                foregroundColor: color,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: BorderSide(color: color),
                 ),
-              );
-            }).toList(),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+              onPressed: () => _highlightMuscle(context, entry.key),
+              child: Text(entry.key),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
 
-  // ========== VISUAL EFFECTS ========== //
-
   void _highlightMuscle(BuildContext context, String muscle) {
-    // Implement muscle highlight logic
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Selected: $muscle'),
@@ -271,44 +262,92 @@ class DashboardPage extends StatelessWidget {
   void _showMuscleDetails(BuildContext context, String muscle, Color color) {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text(muscle, style: TextStyle(color: color)),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Current Rank:'),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: color),
-                  ),
-                  child: Text(
-                    _getRankFromColor(color),
-                    style: TextStyle(color: color, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Close'),
+      builder: (context) => AlertDialog(
+        title: Text(muscle, style: TextStyle(color: color)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Current Rank:'),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: color),
               ),
-            ],
+              child: Text(
+                _getRankFromColor(color),
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
           ),
+        ],
+      ),
     );
   }
 
-  // ========== SUPPORTING WIDGETS ========== //
+  Widget _buildMuscleRankingsSection(BuildContext context) {
+    final muscleGroups = [
+      'Chest',
+      'Back',
+      'Abs',
+      'Left Arm',
+      'Right Arm',
+      'Left Leg',
+      'Right Leg',
+    ];
 
-  Widget _buildRankingItem(String muscle, String rank, bool isChecked) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.07),
+            spreadRadius: 2,
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Text(
+                'Muscle Rankings',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          for (final muscle in muscleGroups)
+            _buildRankingItem(
+              context,
+              muscle,
+              _muscleRanks[muscle] ?? 'Loading...',
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRankingItem(BuildContext context, String muscle, String rank) {
     Color rankColor;
     switch (rank.split(' ')[0]) {
       case 'CHAMPION':
@@ -331,15 +370,13 @@ class DashboardPage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         children: [
-          Checkbox(
-            value: isChecked,
-            onChanged: (value) {},
-            activeColor: Colors.blue,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
+          Text(
+            muscle,
+            style: TextStyle(
+              fontWeight: FontWeight.w500,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
-          Text(muscle, style: const TextStyle(fontWeight: FontWeight.w500)),
           const Spacer(),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -350,7 +387,10 @@ class DashboardPage extends StatelessWidget {
             ),
             child: Text(
               rank,
-              style: TextStyle(color: rankColor, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: rankColor,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -358,143 +398,66 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildMuscleRankingsSection() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 2,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Text(
-                'Muscle Rankings ',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _buildRankingItem('Chest', 'GOLD', false),
-          _buildRankingItem('Back', 'BRONZE', true),
-          _buildRankingItem('Abs', 'SILVER', false),
-          _buildRankingItem('Biceps', 'BRONZE', false),
-          _buildRankingItem('Quads', 'GOLD', false),
-        ],
-      ),
-    );
+  Color _getColorFromRank(String rank) {
+    switch (rank.toUpperCase()) {
+      case 'CHAMPION':
+        return Colors.green;
+      case 'GOLD':
+        return Colors.amber;
+      case 'SILVER':
+        return Colors.grey;
+      case 'BRONZE':
+        return Colors.brown;
+      default:
+        return Colors.blueGrey;
+    }
   }
 
   String _getRankFromColor(Color color) {
-    if (color == Colors.amber) return 'GOLD';
-    if (color == Colors.blue) return 'SILVER';
     if (color == Colors.green) return 'CHAMPION';
+    if (color == Colors.amber) return 'GOLD';
+    if (color == Colors.grey) return 'SILVER';
     if (color == Colors.brown) return 'BRONZE';
-    return 'BRONZE';
+    return 'Unknown';
   }
 }
 
-//========== BODY PAINTER ========== //
-
+// Dummy painter for the body outline
 class _BodyPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color = Colors.grey[200]!
-          ..style = PaintingStyle.fill;
+    // You can add a custom body outline here if you want
+  }
 
-    final centerX = size.width / 2;
-    final centerY = size.height / 2;
-    final torsoWidth = 100.0;
-    final torsoHeight = 160.0;
-    final headRadius = 30.0;
-    final armWidth = 35.0;
-    final armHeight = 135.0;
-    final legWidth = 40.0;
-    final legHeight = 120.0;
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
 
-    // Draw torso
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: Offset(centerX, centerY - 20),
-          width: torsoWidth,
-          height: torsoHeight,
-        ),
-        const Radius.circular(20),
-      ),
-      paint,
-    );
+class TrapezoidPainter extends CustomPainter {
+  final Color color;
+  TrapezoidPainter(this.color);
 
-    // Draw head
-    canvas.drawCircle(
-      Offset(centerX, 30), // Adjusted centerX to ensure correct placement
-      headRadius,
-      paint,
-    );
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color.withOpacity(0.3)
+      ..style = PaintingStyle.fill;
 
-    // Draw arms
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(
-          centerX - torsoWidth / 2 - armWidth - 2,
-          centerY - torsoHeight / 2 + 8,
-          armWidth,
-          armHeight,
-        ),
-        const Radius.circular(20),
-      ),
-      paint,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(
-          centerX + torsoWidth / 2 + 2,
-          centerY - torsoHeight / 2 + 8,
-          armWidth,
-          armHeight,
-        ),
-        const Radius.circular(20),
-      ),
-      paint,
-    );
+    final borderPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
 
-    // Draw legs
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(
-          centerX - torsoWidth / 2,
-          centerY + torsoHeight / 2,
-          legWidth,
-          legHeight,
-        ),
-        const Radius.circular(20),
-      ),
-      paint,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(
-          centerX + torsoWidth / 2 - legWidth,
-          centerY + torsoHeight / 2,
-          legWidth,
-          legHeight,
-        ),
-        const Radius.circular(20),
-      ),
-      paint,
-    );
+    // Top is long, bottom is short
+    final path = Path()
+      ..moveTo(0, 0) // top left (wide)
+      ..lineTo(size.width, 0) // top right (wide)
+      ..lineTo(size.width * 0.75, size.height) // bottom right (narrow)
+      ..lineTo(size.width * 0.25, size.height) // bottom left (narrow)
+      ..close();
+
+    canvas.drawPath(path, paint);
+    canvas.drawPath(path, borderPaint);
   }
 
   @override
