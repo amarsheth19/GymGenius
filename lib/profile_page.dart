@@ -203,7 +203,39 @@ class _ProfilePageState extends State<ProfilePage> {
               end: Alignment.bottomCenter,
             ),
           ),
-          child: const Center(child: Text("Please sign in to view your profile", style: TextStyle(color: Colors.white))),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  "Please sign in to view your profile", 
+                  style: TextStyle(color: Colors.white, fontSize: 18)
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LoginPage(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                  ),
+                  child: const Text(
+                    "Sign In",
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       );
     }
@@ -212,37 +244,68 @@ class _ProfilePageState extends State<ProfilePage> {
       appBar: AppBar(
         title: const Text("Profile"),
         actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Center(
-              child: GestureDetector(
-                onTap: () async {
-                  await FirebaseAuth.instance.signOut();
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const MainScreen(),
-                    ),
-                    (route) => false,
-                  );
-                },
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.logout, color: Colors.black),
-                    SizedBox(width: 4),
-                    Text(
-                      "Log out",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.normal,
+          if (user == null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Center(
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LoginPage(),
                       ),
-                    ),
-                  ],
+                    );
+                  },
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.login, color: Colors.black),
+                      SizedBox(width: 4),
+                      Text(
+                        "Log in",
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
+          if (user != null) // Show logout button if logged in
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Center(
+                child: GestureDetector(
+                  onTap: () async {
+                    await FirebaseAuth.instance.signOut();
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MainScreen(),
+                      ),
+                      (route) => false,
+                    );
+                  },
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.logout, color: Colors.black),
+                      SizedBox(width: 4),
+                      Text(
+                        "Log out",
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
       body: Container(
