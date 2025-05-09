@@ -289,15 +289,15 @@ class _ProfilePageState extends State<ProfilePage> {
                       (route) => false,
                     );
                   },
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.logout, color: Colors.black),
+                      Icon(Icons.logout, color: Theme.of(context).appBarTheme.titleTextStyle?.color),
                       SizedBox(width: 4),
                       Text(
                         "Log out",
                         style: TextStyle(
-                          color: Colors.black,
+                          color: Theme.of(context).appBarTheme.titleTextStyle?.color,
                           fontWeight: FontWeight.normal,
                         ),
                       ),

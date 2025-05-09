@@ -353,22 +353,20 @@ class _RecordPageState extends State<RecordPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Record Workout'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  _currentUser?.uid.substring(0, 8) ?? 'No UID',
-                  style: const TextStyle(fontSize: 12),
-                ),
-                Text(_userEmail, style: const TextStyle(fontSize: 12)),
-              ],
-            ),
-          ),
-        ],
+
+        //Only to display email top right
+        // actions: [
+        //   Padding(
+        //     padding: const EdgeInsets.all(8.0),
+        //     child: Column(
+        //       mainAxisAlignment: MainAxisAlignment.center,
+        //       crossAxisAlignment: CrossAxisAlignment.end,
+        //       children: [
+        //         Text(_userEmail, style: const TextStyle(fontSize: 12)),
+        //       ],
+        //     ),
+        //   ),
+        // ],
       ),
       body: Column(
         children: [
