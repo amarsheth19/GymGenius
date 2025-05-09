@@ -21,6 +21,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> _fetchMuscleRanks() async {
+    if (!mounted) return;
     final user = _auth.currentUser;
     if (user == null) return;
 
@@ -39,6 +40,7 @@ class _DashboardPageState extends State<DashboardPage> {
         if (expectedMuscles.contains(doc.id)) doc.id: doc['rank'] as String,
     };
 
+    if (!mounted) return;
     setState(() => _muscleRanks = data);
   }
 
@@ -119,13 +121,13 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     ),
                   ),
-                  _buildMuscleZone(context, 'Back', 185, 25, 70, 55),
-                  _buildMuscleZone(context, 'Chest', 105, 70, 110, 80),
-                  _buildMuscleZone(context, 'Left Arm', 40, 90, 70, 80),
-                  _buildMuscleZone(context, 'Right Arm', 40, 90, 215, 80),
+                  _buildMuscleZone(context, 'Back', 180, 25, 73, 55),
+                  _buildMuscleZone(context, 'Chest', 111, 70, 107, 80),
+                  _buildMuscleZone(context, 'Left Arm', 33, 85, 73, 80),
+                  _buildMuscleZone(context, 'Right Arm', 33, 85, 218, 80),
                   _buildMuscleZone(context, 'Abs', 55, 46, 135, 147),
-                  _buildMuscleZone(context, 'Left Leg', 44, 100, 110, 190),
-                  _buildMuscleZone(context, 'Right Leg', 44, 100, 170, 190),
+                  _buildMuscleZone(context, 'Left Leg', 41, 100, 113, 190),
+                  _buildMuscleZone(context, 'Right Leg', 41, 100, 170, 190),
                 ],
               ),
             ),
@@ -161,7 +163,7 @@ class _DashboardPageState extends State<DashboardPage> {
               painter: TrapezoidPainter(color),
               child: Center(
                 child: Text(
-                  name.split(' ').first,
+                  name.split(' ').last,
                   style: TextStyle(
                     color: color,
                     fontWeight: FontWeight.bold,
@@ -191,7 +193,7 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
           child: Center(
             child: Text(
-              name.split(' ').first,
+              name.split(' ').last,
               style: TextStyle(
                 color: color,
                 fontWeight: FontWeight.bold,
