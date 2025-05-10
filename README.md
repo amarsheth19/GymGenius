@@ -1,10 +1,10 @@
 # GymGenius: AI-Powered Training & Performance Tracker  
 
 ## Team Members  
-- Devanshu (dhp4)  
-- Adithya (avraman2)  
-- Amar (amar4)  
-- Rushil (rushily2)  
+- Devanshu (dhp4) Backend
+- Adithya (avraman2) Backend  
+- Amar (amar4) Frontend
+- Rushil (rushily2)  Frontend
 
 ## Overview  
 GymGenius is a fitness application designed to help users achieve their workout goals by providing AI-powered feedback, performance tracking, and motivational incentives. The app offers real-time form analysis, personalized training suggestions, and gamified rewards to keep users engaged and progressing toward their fitness objectives.  
