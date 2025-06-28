@@ -66,13 +66,6 @@ GymGenius is a fitness application designed to help users achieve their workout 
 4. Push to the branch (`git push origin feature/your-feature`).  
 5. Open a Pull Request.  
 
-## License  
-*(To be determined; likely MIT or Apache 2.0.)*  
 
 ---  
 **🏆 Motto**: "Train smarter, not harder—with AI by your side."  
-
-
-=======
-# team-31-project
->>>>>>> f107d558290d35ef62e802236501c6f2fee90835
