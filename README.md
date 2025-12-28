@@ -39,5 +39,3 @@ GymGenius is a fitness application designed to help users achieve their workout 
 - **CI/CD**: Automated testing with `unittest` (Python) & `coverage.py`  
 - **Branching Strategy**: Feature branching with rotating PR reviews  
  
----  
-**🏆 Motto**: "Train smarter, not harder—with AI by your side."  
