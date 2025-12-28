@@ -1,6 +1,6 @@
 # GymGenius: AI-Powered Training & Performance Tracker  
 
-## Team Members  
+## Team Members & Primary Workload 
 - Devanshu (dhp4): Backend development
     - Worked on developing and integrating CV model
 - Adithya (avraman2): Backend development
